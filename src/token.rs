@@ -23,7 +23,7 @@ impl Default for TokenType {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Token {
     tok_type: TokenType,
     val: String
