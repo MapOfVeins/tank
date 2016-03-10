@@ -17,20 +17,17 @@ pub enum TokenType {
     Eof
 }
 
-impl Default for TokenType {
-    fn default() -> TokenType {
-        TokenType::Eof
-    }
-}
-
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Token {
     tok_type: TokenType,
     val: String
 }
 
 impl Token {
-    pub fn new() -> Token {
-        Default::default()
+    pub fn new(token_type: TokenType, value: String) -> Token {
+        Token {
+            tok_type: token_type,
+            val: value
+        }
     }
 }
