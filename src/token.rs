@@ -8,27 +8,30 @@ pub enum TokenType {
     Equals,
     Minus,
     Arrow,
-    Let,
-    Type,
-    Identifier,
+    Ident,
     Number,
-    If,
-    For,
-    In,
     Eof
 }
 
 #[derive(Debug)]
 pub struct Token {
     tok_type: TokenType,
-    val: String
+    val: String,
+    is_reserved: bool
 }
 
 impl Token {
     pub fn new(token_type: TokenType, value: String) -> Token {
         Token {
             tok_type: token_type,
-            val: value
+            val: value,
+            is_reserved: false
         }
+    }
+
+    pub fn set_reserved(&mut self, r: bool) -> &mut Token {
+        self.is_reserved = r;
+
+        self
     }
 }

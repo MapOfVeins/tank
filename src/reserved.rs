@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use token::TokenType;
 
 #[derive(Debug)]
 pub struct Reserved {
@@ -14,6 +15,11 @@ impl Reserved {
         w.insert(String::from("let"), 1);
         w.insert(String::from("for"), 2);
         w.insert(String::from("in"), 3);
+
+        // Add types
+        w.insert(String::from("int"), 4);
+        w.insert(String::from("bool"), 5);
+        w.insert(String::from("string"), 6);
 
         Reserved {
             words: w

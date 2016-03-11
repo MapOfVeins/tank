@@ -25,7 +25,7 @@ impl Lexer {
             Err(error) => panic!("Failed to open {}: {}", display, Error::description(&error)),
             Ok(file) => file
         };
-        
+
         let mut str = String::new();
         match file.read_to_string(&mut str) {
             Err(error) => panic!("Failed to read {}: {}", display, Error::description(&error)),
@@ -33,7 +33,7 @@ impl Lexer {
         }
 
         let r = Reserved::new();
-        
+
         Lexer {
             input: str,
             reserved: r,
@@ -97,7 +97,7 @@ impl Lexer {
     fn lex_word_or_number(&mut self) -> Option<Token> {
         let ch = self.curr_char.unwrap();
         let mut ident = ch.to_string();
-        let tkn;
+        let mut tkn = None;
 
         if ch.is_alphabetic() {
             self.get_char();
@@ -109,13 +109,17 @@ impl Lexer {
                 self.get_char();
             }
 
+            let i = ident.clone();
+            let mut some_tok = Token::new(TokenType::Ident, i);
+
             // Match on reserved words
+            // TODO: separate checking for types here?
             match self.reserved.words.get(&ident) {
-                Some(num) => tkn = Some(Token::new(TokenType::If, ident)),
-                None => tkn = None
+                Some(num) => some_tok.set_reserved(true),
+                None => some_tok.set_reserved(false)
             };
-            
-            // Match on types
+
+            tkn = Some(some_tok);
 
         } else if ch.is_digit(10) {
             self.get_char();
@@ -143,5 +147,5 @@ impl Lexer {
 
         next_ch
     }
-    
+
 }
