@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TokenType {
     LeftBrace,
     RightBrace,
@@ -13,19 +13,19 @@ pub enum TokenType {
     Eof
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Token {
-    tok_type: TokenType,
-    val: String,
-    is_reserved: bool
+    pub tok_type: TokenType,
+    pub val: String,
+    pub is_reserved: bool
 }
 
 impl Token {
     pub fn new(token_type: TokenType, value: String) -> Token {
         Token {
-            tok_type: token_type,
-            val: value,
-            is_reserved: false
+             tok_type: token_type,
+             val: value,
+             is_reserved: false
         }
     }
 

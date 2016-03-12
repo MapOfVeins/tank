@@ -2,40 +2,21 @@ use token::Token;
 use token::TokenType;
 use reserved::Reserved;
 
-use std::error::Error;
-use std::path::Path;
-use std::fs::File;
-use std::io::Read;
-
 #[derive(Debug)]
 pub struct Lexer {
     input: String,
     reserved: Reserved,
-    curr_tok: Option<Token>,
-    curr_char: Option<char>,
+    pub curr_tok: Option<Token>,
+    pub curr_char: Option<char>,
     char_count: usize
 }
 
 impl Lexer {
-    pub fn new(file_name: String) -> Lexer {
-        let path = Path::new(&file_name);
-        let display = path.display();
-
-        let mut file = match File::open(&path) {
-            Err(error) => panic!("Failed to open {}: {}", display, Error::description(&error)),
-            Ok(file) => file
-        };
-
-        let mut str = String::new();
-        match file.read_to_string(&mut str) {
-            Err(error) => panic!("Failed to read {}: {}", display, Error::description(&error)),
-            Ok(_) => ()
-        }
-
+    pub fn new(file_contents: String) -> Lexer {
         let r = Reserved::new();
 
         Lexer {
-            input: str,
+            input: file_contents,
             reserved: r,
             curr_tok: None,
             curr_char: None,
@@ -44,9 +25,13 @@ impl Lexer {
     }
 
     pub fn lex(&mut self) -> &mut Lexer {
-        let ch = self.curr_char.unwrap();
+        self.get_char();
+        let mut ch = self.curr_char.unwrap();
+        
+        // TODO: preserve whitespace for proper generation?
         while ch.is_whitespace() {
             self.get_char();
+            ch = self.curr_char.unwrap();
         }
 
         match ch {
@@ -86,8 +71,8 @@ impl Lexer {
     }
 
     fn get_minus_or_arrow(&mut self) -> Option<Token> {
-        let tok = match self.peek().unwrap() {
-            '>' => Some(Token::new(TokenType::Arrow, "->".to_string())),
+        let tok = match self.peek() {
+            Some('>') => Some(Token::new(TokenType::Arrow, "->".to_string())),
             _ => Some(Token::new(TokenType::Minus, "-".to_string())),
         };
 
@@ -95,18 +80,21 @@ impl Lexer {
     }
 
     fn lex_word_or_number(&mut self) -> Option<Token> {
-        let ch = self.curr_char.unwrap();
+        let mut ch = self.curr_char.unwrap_or(' ');
         let mut ident = ch.to_string();
-        let mut tkn = None;
+        let mut tok = None;
 
         if ch.is_alphabetic() {
             self.get_char();
 
             while ch.is_alphanumeric() {
-                let append = ch.to_string();
-                ident = ident + &append;
+                let append = self.curr_char.unwrap_or(' ');
+                if !append.is_whitespace() {
+                    ident = ident + &append.to_string();
+                }
 
                 self.get_char();
+                ch = append;
             }
 
             let i = ident.clone();
@@ -119,33 +107,122 @@ impl Lexer {
                 None => some_tok.set_reserved(false)
             };
 
-            tkn = Some(some_tok);
+            tok = Some(some_tok);
 
         } else if ch.is_digit(10) {
             self.get_char();
 
             while ch.is_digit(10) {
-                let append = ch.to_string();
-                ident = ident + &append;
+                let append = self.curr_char.unwrap_or(' ');
+                if !append.is_whitespace() {
+                    ident = ident + &append.to_string();
+                }
 
                 self.get_char();
+                ch = append;
             }
 
-            tkn = Some(Token::new(TokenType::Number, ident));
+            tok = Some(Token::new(TokenType::Number, ident));
         } else {
-            tkn = Some(Token::new(TokenType::Eof, "".to_string()));
+            tok = Some(Token::new(TokenType::Eof, "".to_string()));
         }
 
-        tkn
+        tok
     }
 
     fn peek(&self) -> Option<char> {
-        let next_ch = match self.input.chars().nth(self.char_count + 1) {
+        let next_ch = match self.input.chars().nth(self.char_count) {
             Some(c) => Some(c),
             None => None
         };
 
         next_ch
     }
+}
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use token::Token;
+    use token::TokenType;
+
+    #[test]
+    fn test_lex_single_char() {
+        let mut left_brace_lex = Lexer::new("{".to_string());
+        left_brace_lex.lex();
+
+        let curr_tok = left_brace_lex.curr_tok.unwrap();
+        let expected = Token::new(TokenType::LeftBrace, "{".to_string());
+
+        assert_eq!(curr_tok, expected);
+    }
+
+    #[test]
+    fn test_lex_arrow() {
+        let mut arrow_lex = Lexer::new("->".to_string());
+        arrow_lex.lex();
+
+        let curr_tok = arrow_lex.curr_tok.unwrap();
+        let expected = Token::new(TokenType::Arrow, "->".to_string());
+
+        assert_eq!(curr_tok, expected);
+    }
+
+    #[test]
+    fn test_lex_minus() {
+        let mut minus_lex = Lexer::new("-".to_string());
+        minus_lex.lex();
+
+        let curr_tok_minus = minus_lex.curr_tok.unwrap();
+        let expected_minus = Token::new(TokenType::Minus, "-".to_string());
+
+        assert_eq!(curr_tok_minus, expected_minus);
+    }
+
+    #[test]
+    fn test_lex_ident_not_reserved() {
+        let mut ident_lex = Lexer::new("testIdentifier".to_string());
+        ident_lex.lex();
+
+        let curr_tok = ident_lex.curr_tok.unwrap();
+        let expected = Token::new(TokenType::Ident, "testIdentifier".to_string());
+
+        assert_eq!(curr_tok, expected);
+    }
+
+    #[test]
+    fn test_lex_ident_reserved() {
+        let mut ident_lex = Lexer::new("int".to_string());
+        ident_lex.lex();
+
+        let curr_tok = ident_lex.curr_tok.unwrap();
+        let mut expected = Token::new(TokenType::Ident, "int".to_string());
+        expected.set_reserved(true);
+
+        assert_eq!(curr_tok, expected);
+        assert!(curr_tok.is_reserved);
+    }
+
+    #[test]
+    fn test_lex_number() {
+        let mut num_lex = Lexer::new("8080".to_string());
+        num_lex.lex();
+
+        let curr_tok = num_lex.curr_tok.unwrap();
+        let expected = Token::new(TokenType::Number, "8080".to_string());
+
+        assert_eq!(curr_tok, expected);
+    }
+
+    #[test]
+    fn test_lex_empty() {
+        let mut num_lex = Lexer::new("".to_string());
+        num_lex.lex();
+
+        let curr_tok = num_lex.curr_tok.unwrap();
+        let expected = Token::new(TokenType::Eof, "".to_string());
+
+        assert_eq!(curr_tok, expected);
+
+    }
 }
