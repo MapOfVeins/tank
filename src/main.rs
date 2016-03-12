@@ -1,6 +1,8 @@
 mod token;
 mod lexer;
 mod reserved;
+mod parser;
+mod ast;
 
 use std::env;
 use std::path::Path;
@@ -9,6 +11,7 @@ use std::io::Read;
 use std::error::Error;
 
 use lexer::Lexer;
+use parser::Parser;
 
 fn main() {
     let file_name = env::args().nth(1).unwrap();
@@ -21,11 +24,11 @@ fn main() {
         Ok(file) => file
     };
 
-    let mut str = String::new();
-    match file.read_to_string(&mut str) {
+    let mut file_contents = String::new();
+    match file.read_to_string(&mut file_contents) {
         Err(error) => panic!("Failed to read {}: {}", display, Error::description(&error)),
         Ok(_) => ()
     }
     
-    let lexer = Lexer::new(str);
+    let parser = Parser::new(file_contents);
 }

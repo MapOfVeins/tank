@@ -26,11 +26,23 @@ impl Lexer {
 
     pub fn lex(&mut self) -> &mut Lexer {
         self.get_char();
+
+        if self.curr_char.is_none() {
+            self.curr_tok = Some(Token::new(TokenType::Eof, "".to_string()));
+            return self;
+        }
+
+        // curr_char is guaranteed to be Some here
         let mut ch = self.curr_char.unwrap();
-        
+
         // TODO: preserve whitespace for proper generation?
         while ch.is_whitespace() {
             self.get_char();
+            if self.curr_char.is_none() {
+                self.curr_tok = Some(Token::new(TokenType::Eof, "".to_string()));
+                return self;
+            }
+        
             ch = self.curr_char.unwrap();
         }
 
@@ -216,13 +228,12 @@ mod tests {
 
     #[test]
     fn test_lex_empty() {
-        let mut num_lex = Lexer::new("".to_string());
-        num_lex.lex();
+        let mut empty_lex = Lexer::new("".to_string());
+        empty_lex.lex();
 
-        let curr_tok = num_lex.curr_tok.unwrap();
+        let curr_tok = empty_lex.curr_tok.unwrap();
         let expected = Token::new(TokenType::Eof, "".to_string());
 
         assert_eq!(curr_tok, expected);
-
     }
 }
