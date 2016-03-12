@@ -5,7 +5,7 @@ use reserved::Reserved;
 #[derive(Debug)]
 pub struct Lexer {
     input: String,
-    reserved: Reserved,
+    pub reserved: Reserved,
     pub curr_tok: Option<Token>,
     pub curr_char: Option<char>,
     char_count: usize
