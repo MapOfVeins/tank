@@ -23,6 +23,9 @@ impl Ast {
         }
     }
 
+    /// "Overloaded" new function, used to create a new ast node
+    /// but with a defined value instead of using an empty string,
+    /// as in the above new() method.
     pub fn new_with_val(t: AstType, v: String) -> Ast {
         let mut c = Vec::new();
         Ast {

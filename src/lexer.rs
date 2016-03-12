@@ -24,6 +24,12 @@ impl Lexer {
         }
     }
 
+    /// Lex the input at the current point, represented by the char_count field.
+    /// Once lexing is complete, sets the curr_tok field to the correct token.
+    ///
+    /// After this function is called, the curr_tok field should never be None.
+    /// If we cannot find a proper token during lexing, we will return the token
+    /// for EOF.
     pub fn lex(&mut self) -> &mut Lexer {
         self.get_char();
 
@@ -32,7 +38,7 @@ impl Lexer {
             return self;
         }
 
-        // curr_char is guaranteed to be Some here
+        // curr_char is guaranteed to be Some here.
         let mut ch = self.curr_char.unwrap();
 
         // TODO: preserve whitespace for proper generation?
@@ -60,7 +66,12 @@ impl Lexer {
         self
     }
 
+    /// Returns the next available char from the file contents. If no
+    /// char is available (ie. at end of input, or when the char_count
+    /// field is greater than the number of chars in the file), then
+    /// None is returned.
     fn get_char(&mut self) -> &mut Lexer {
+        // O(n)
         match self.input.chars().nth(self.char_count) {
             Some(c) => self.curr_char = Some(c),
             None => self.curr_char = None
@@ -71,6 +82,11 @@ impl Lexer {
         self
     }
 
+    /// Retrieve a new token based on the current character, or None
+    /// if no curr_char exists. This function is only used for tokens
+    /// that have single character values.
+    ///
+    /// After a token is created, we advance the current char pointer.
     fn get_token(&mut self, token_type: TokenType) -> Option<Token> {
         let tok = match self.curr_char {
             Some(c) => Some(Token::new(token_type, c.to_string())),
@@ -82,6 +98,8 @@ impl Lexer {
         tok
     }
 
+    /// Called when a '-' characted is encountered. Checks for a following
+    /// '>' character, then returns a token for either a minus sign or an arrow.
     fn get_minus_or_arrow(&mut self) -> Option<Token> {
         let tok = match self.peek() {
             Some('>') => Some(Token::new(TokenType::Arrow, "->".to_string())),
@@ -91,6 +109,13 @@ impl Lexer {
         tok
     }
 
+    /// When we encounter a potential identifier, we continue lexing here
+    /// to build the full string or number. The char pointer will be advanced
+    /// to the end of the word.
+    ///
+    /// Also checks for reserved words if we have a valid identifier. Sets the
+    /// proper token field to true if the word is reserved, then we can deal with
+    /// it during parsing.
     fn lex_word_or_number(&mut self) -> Option<Token> {
         let mut ch = self.curr_char.unwrap_or(' ');
         let mut ident = ch.to_string();
@@ -142,6 +167,8 @@ impl Lexer {
         tok
     }
 
+    /// Get the next char to be lexed. Does not consume the char,
+    /// that will be left to the get_char method.
     fn peek(&self) -> Option<char> {
         let next_ch = match self.input.chars().nth(self.char_count) {
             Some(c) => Some(c),
