@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
     LeftBrace,
     RightBrace,
@@ -13,7 +13,7 @@ pub enum TokenType {
     Eof
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
     pub tok_type: TokenType,
     pub val: String,

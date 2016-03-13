@@ -14,13 +14,14 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(file_contents: String) -> Lexer {
         let r = Reserved::new();
+        let c = file_contents.chars().nth(0);
 
         Lexer {
             input: file_contents,
             reserved: r,
             curr_tok: None,
-            curr_char: None,
-            char_count: 0
+            curr_char: c,
+            char_count: 1
         }
     }
 
@@ -31,8 +32,6 @@ impl Lexer {
     /// If we cannot find a proper token during lexing, we will return the token
     /// for EOF.
     pub fn lex(&mut self) -> &mut Lexer {
-        self.get_char();
-
         if self.curr_char.is_none() {
             self.curr_tok = Some(Token::new(TokenType::Eof, "".to_string()));
             return self;
@@ -106,6 +105,8 @@ impl Lexer {
             _ => Some(Token::new(TokenType::Minus, "-".to_string())),
         };
 
+        self.get_char();
+
         tok
     }
 
@@ -119,7 +120,7 @@ impl Lexer {
     fn lex_word_or_number(&mut self) -> Option<Token> {
         let mut ch = self.curr_char.unwrap_or(' ');
         let mut ident = ch.to_string();
-        let mut tok = None;
+        let tok;
 
         if ch.is_alphabetic() {
             self.get_char();
@@ -139,8 +140,10 @@ impl Lexer {
 
             // Match on reserved words
             // TODO: separate checking for types here?
+            // TODO: way better reserved word handling is needed here.
+            // The is_reserved field is not useful.
             match self.reserved.words.get(&ident) {
-                Some(num) => some_tok.set_reserved(true),
+                Some(_) => some_tok.set_reserved(true),
                 None => some_tok.set_reserved(false)
             };
 

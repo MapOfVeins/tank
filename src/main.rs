@@ -10,11 +10,12 @@ use std::fs::File;
 use std::io::Read;
 use std::error::Error;
 
-use lexer::Lexer;
 use parser::Parser;
 
 fn main() {
-    let file_name = env::args().nth(1).unwrap();
+    let file_name = env::args().nth(1).unwrap_or_else(|| {
+        panic!("tank: Expected a file name as the first arg.");
+    });
 
     let path = Path::new(&file_name);
     let display = path.display();
@@ -30,5 +31,6 @@ fn main() {
         Ok(_) => ()
     }
     
-    let parser = Parser::new(file_contents);
+    let mut parser = Parser::new(file_contents);
+    parser.parse();
 }

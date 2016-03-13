@@ -15,7 +15,7 @@ pub struct Ast {
 
 impl Ast {
     pub fn new(t: AstType) -> Ast {
-        let mut c = Vec::new();
+        let c = Vec::new();
         Ast {
             ast_type: t,
             val: "".to_string(),
@@ -27,7 +27,7 @@ impl Ast {
     /// but with a defined value instead of using an empty string,
     /// as in the above new() method.
     pub fn new_with_val(t: AstType, v: String) -> Ast {
-        let mut c = Vec::new();
+        let c = Vec::new();
         Ast {
             ast_type: t,
             val: v,

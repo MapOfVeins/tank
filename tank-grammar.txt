@@ -1,8 +1,8 @@
 <template> ::= <element>
-<element> ::= <id> <attr_list> '->' | <if_expr> | <for_expr> | <assign_expr> | <id>
+<element> ::= <id> <attr_list> | <if_expr> | <for_expr> | <assign_expr> | <id>
 <id> ::= "a" | "b" | ... | "z"
 <number> ::= 0 | 1 | ... | 9
-<attr_list> ::= '(' <id> ':' <id> ')' <element>
+<attr_list> ::= '(' <id> ':' <id> ')' '->' <element>
 <if_expr> ::= "if" <conditional> "{" <element> "}"
 <for_expr> ::= "for" <id> "in" <id> "{" <element> "}"
 <assign_expr> ::= "let" <id> ":" <type> "=" <id> | <number>

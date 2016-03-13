@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use token::TokenType;
 
 #[derive(Debug)]
 pub struct Reserved {
