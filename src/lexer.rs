@@ -11,6 +11,8 @@ pub struct Lexer {
     char_count: usize
 }
 
+const EOF: char = '\0';
+
 impl Lexer {
     pub fn new(file_contents: String) -> Lexer {
         let r = Reserved::new();
@@ -33,18 +35,17 @@ impl Lexer {
     /// for EOF.
     pub fn lex(&mut self) -> &mut Lexer {
         if self.curr_char.is_none() {
-            self.curr_tok = Some(Token::new(TokenType::Eof, "".to_string()));
+            self.curr_tok = Some(Token::new(TokenType::Eof));
             return self;
         }
 
         // curr_char is guaranteed to be Some here.
         let mut ch = self.curr_char.unwrap();
 
-        // TODO: preserve whitespace for proper generation?
         while ch.is_whitespace() {
             self.get_char();
             if self.curr_char.is_none() {
-                self.curr_tok = Some(Token::new(TokenType::Eof, "".to_string()));
+                self.curr_tok = Some(Token::new(TokenType::Eof));
                 return self;
             }
         
@@ -61,8 +62,28 @@ impl Lexer {
             '-' => self.curr_tok = self.get_minus_or_arrow(),
             _   => self.curr_tok = self.lex_word_or_number()
         }
-
+        
         self
+    }
+
+    /// Check if the next char is a left paren. This function skips past any whitespace
+    /// and does not change the lexer's internal char counter. Primarily used by
+    /// the parser to determine if we are parsing an attribute list or the content
+    /// of the current element.
+    pub fn is_next_paren(&mut self) -> bool {
+        let mut ch = self.curr_char.unwrap_or(EOF);
+        let mut offset = self.char_count;
+
+        while ch.is_whitespace() {
+            offset = offset + 1;
+        
+            ch = self.peek(offset).unwrap_or(EOF);
+        }
+
+        match ch {
+            '(' => true,
+            _ => false
+        }
     }
 
     /// Returns the next available char from the file contents. If no
@@ -88,8 +109,8 @@ impl Lexer {
     /// After a token is created, we advance the current char pointer.
     fn get_token(&mut self, token_type: TokenType) -> Option<Token> {
         let tok = match self.curr_char {
-            Some(c) => Some(Token::new(token_type, c.to_string())),
-            None => Some(Token::new(TokenType::Eof, String::new()))
+            Some(c) => Some(Token::new_from_value(token_type, c.to_string())),
+            None => Some(Token::new(TokenType::Eof))
         };
 
         self.get_char();
@@ -100,11 +121,17 @@ impl Lexer {
     /// Called when a '-' characted is encountered. Checks for a following
     /// '>' character, then returns a token for either a minus sign or an arrow.
     fn get_minus_or_arrow(&mut self) -> Option<Token> {
-        let tok = match self.peek() {
-            Some('>') => Some(Token::new(TokenType::Arrow, "->".to_string())),
-            _ => Some(Token::new(TokenType::Minus, "-".to_string())),
-        };
+        let ch = self.peek(0).unwrap();
+        let tok;
 
+        if ch == '>' {
+            // Consume the '-' char here, the '>' is consumed below.
+            self.get_char();
+            tok = Some(Token::new_from_value(TokenType::Arrow, "->".to_string()))
+        } else {
+            tok = Some(Token::new_from_value(TokenType::Minus, "-".to_string()))
+        }
+        
         self.get_char();
 
         tok
@@ -136,7 +163,7 @@ impl Lexer {
             }
 
             let i = ident.clone();
-            let mut some_tok = Token::new(TokenType::Ident, i);
+            let mut some_tok = Token::new_from_value(TokenType::Ident, i);
 
             // Match on reserved words
             // TODO: separate checking for types here?
@@ -162,18 +189,19 @@ impl Lexer {
                 ch = append;
             }
 
-            tok = Some(Token::new(TokenType::Number, ident));
+            tok = Some(Token::new_from_value(TokenType::Number, ident));
         } else {
-            tok = Some(Token::new(TokenType::Eof, "".to_string()));
+            tok = Some(Token::new(TokenType::Eof));
         }
 
         tok
     }
 
     /// Get the next char to be lexed. Does not consume the char,
-    /// that will be left to the get_char method.
-    fn peek(&self) -> Option<char> {
-        let next_ch = match self.input.chars().nth(self.char_count) {
+    /// that will be left to the get_char method. Allows for an offset value
+    /// to be passed in, indicating how far to look ahead.
+    fn peek(&self, offset: usize) -> Option<char> {
+        let next_ch = match self.input.chars().nth(self.char_count + offset) {
             Some(c) => Some(c),
             None => None
         };
@@ -194,7 +222,7 @@ mod tests {
         left_brace_lex.lex();
 
         let curr_tok = left_brace_lex.curr_tok.unwrap();
-        let expected = Token::new(TokenType::LeftBrace, "{".to_string());
+        let expected = Token::new_from_value(TokenType::LeftBrace, "{".to_string());
 
         assert_eq!(curr_tok, expected);
     }
@@ -205,7 +233,7 @@ mod tests {
         arrow_lex.lex();
 
         let curr_tok = arrow_lex.curr_tok.unwrap();
-        let expected = Token::new(TokenType::Arrow, "->".to_string());
+        let expected = Token::new_from_value(TokenType::Arrow, "->".to_string());
 
         assert_eq!(curr_tok, expected);
     }
@@ -216,7 +244,7 @@ mod tests {
         minus_lex.lex();
 
         let curr_tok_minus = minus_lex.curr_tok.unwrap();
-        let expected_minus = Token::new(TokenType::Minus, "-".to_string());
+        let expected_minus = Token::new_from_value(TokenType::Minus, "-".to_string());
 
         assert_eq!(curr_tok_minus, expected_minus);
     }
@@ -227,7 +255,7 @@ mod tests {
         ident_lex.lex();
 
         let curr_tok = ident_lex.curr_tok.unwrap();
-        let expected = Token::new(TokenType::Ident, "testIdentifier".to_string());
+        let expected = Token::new_from_value(TokenType::Ident, "testIdentifier".to_string());
 
         assert_eq!(curr_tok, expected);
     }
@@ -238,7 +266,7 @@ mod tests {
         ident_lex.lex();
 
         let curr_tok = ident_lex.curr_tok.unwrap();
-        let mut expected = Token::new(TokenType::Ident, "int".to_string());
+        let mut expected = Token::new_from_value(TokenType::Ident, "int".to_string());
         expected.set_reserved(true);
 
         assert_eq!(curr_tok, expected);
@@ -251,7 +279,7 @@ mod tests {
         num_lex.lex();
 
         let curr_tok = num_lex.curr_tok.unwrap();
-        let expected = Token::new(TokenType::Number, "8080".to_string());
+        let expected = Token::new_from_value(TokenType::Number, "8080".to_string());
 
         assert_eq!(curr_tok, expected);
     }
@@ -262,7 +290,7 @@ mod tests {
         empty_lex.lex();
 
         let curr_tok = empty_lex.curr_tok.unwrap();
-        let expected = Token::new(TokenType::Eof, "".to_string());
+        let expected = Token::new(TokenType::Eof);
 
         assert_eq!(curr_tok, expected);
     }

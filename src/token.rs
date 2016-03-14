@@ -21,7 +21,15 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, value: String) -> Token {
+    pub fn new(token_type: TokenType) -> Token {
+        Token {
+             tok_type: token_type,
+             val: "".to_string(),
+             is_reserved: false
+        }
+    }
+    
+    pub fn new_from_value(token_type: TokenType, value: String) -> Token {
         Token {
              tok_type: token_type,
              val: value,

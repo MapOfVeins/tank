@@ -6,7 +6,6 @@ use ast::AstType;
 
 pub struct Parser {
     lexer: Lexer,
-    pub token: Option<Token>,
     curr_val: String,
     curr_type: TokenType
 }
@@ -17,7 +16,7 @@ impl Parser {
         l.lex();
         let tok = l.curr_tok
             .take()
-            .unwrap_or(Token::new(TokenType::Eof, "".to_string()));
+            .unwrap_or(Token::new(TokenType::Eof));
 
         let tv = tok.val;
         let tt = tok.tok_type;
@@ -26,7 +25,6 @@ impl Parser {
             lexer: l,
             curr_val: tv,
             curr_type: tt,
-            token: None
         }
     }
 
@@ -38,19 +36,36 @@ impl Parser {
         let mut root_ast = Ast::new(AstType::Template);
         root_ast.children.push(self.element());
 
+        println!("{:?}", root_ast);
+
         root_ast
     }
 
     fn element(&mut self) -> Box<Ast> {
+        if self.curr_type != TokenType::Ident {
+            panic!("tank: Illegal character found, expected identifier")            
+        }
+        
         let mut el_ast = Ast::new(AstType::Element);
 
-        match self.curr_type {
-            TokenType::Ident => el_ast.children.push(self.ident()),
-            _ => panic!("tank: Illegal character found, expected identifier")
+        if self.lexer.is_next_paren() {
+            el_ast.children.push(self.ident());
+            self.get_next_tok();
+            el_ast.children.push(self.attr_list());
+            // Here, we expect the element contents or the next element
+            el_ast.children.push(self.element());
+        } else {
+            let mut content = String::new();
+            while self.curr_type == TokenType::Ident {
+                content = content + &self.curr_val;
+                self.get_next_tok();
+            }
+            
+            // We re-assign el_ast to be content now, instead
+            // of pushing this content into the children of a
+            // new element.
+            el_ast = self.el_content(content);
         }
-
-        self.get_next_tok();
-        self.attr_list();
 
         Box::new(el_ast)
     }
@@ -64,6 +79,12 @@ impl Parser {
         let ident_ast = Ast::new_with_val(AstType::Ident, self.curr_val.clone());
 
         Box::new(ident_ast)
+    }
+
+    fn el_content(&mut self, content_val: String) -> Ast {        
+        let content_ast = Ast::new_with_val(AstType::ElContent, content_val);
+
+        content_ast
     }
 
     fn attr_list(&mut self) -> Box<Ast> {
@@ -96,18 +117,12 @@ impl Parser {
             panic!("tank: Parse error - Expected ')'");
         }
         
-        println!("{:?}", self.curr_type);
-
         if self.curr_type == TokenType::Arrow {
             self.get_next_tok();
         } else {
             panic!("tank: Parse error - Expected '->'");
         }
 
-        println!("{:?}", self.curr_type);
-
-        attr_ast.children.push(self.element());
-        
         Box::new(attr_ast)
     }
 
@@ -128,7 +143,7 @@ impl Parser {
 
         let tok = self.lexer.curr_tok
             .take()
-            .unwrap_or(Token::new(TokenType::Eof, "".to_string()));
+            .unwrap_or(Token::new(TokenType::Eof));
 
         self.curr_val = tok.val;
         self.curr_type = tok.tok_type;

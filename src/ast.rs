@@ -3,7 +3,8 @@ pub enum AstType {
     Template,
     Element,
     Ident,
-    AttrList
+    AttrList,
+    ElContent
 }
 
 #[derive(Debug)]
