@@ -3,15 +3,18 @@ pub enum AstType {
     Template,
     Element,
     Ident,
+    Number,
     AttrList,
-    ElContent
+    ElContent,
+    AssignExpr
 }
 
 #[derive(Debug)]
 pub struct Ast {
     pub ast_type: AstType,
     pub val: String,
-    pub children: Vec<Box<Ast>>
+    pub children: Vec<Box<Ast>>,
+    pub var_type: Option<String>
 }
 
 impl Ast {
@@ -20,7 +23,8 @@ impl Ast {
         Ast {
             ast_type: t,
             val: "".to_string(),
-            children: c
+            children: c,
+            var_type: None
         }
     }
 
@@ -32,7 +36,8 @@ impl Ast {
         Ast {
             ast_type: t,
             val: v,
-            children: c
+            children: c,
+            var_type: None
         }
     }
 }

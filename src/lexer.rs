@@ -2,6 +2,9 @@ use token::Token;
 use token::TokenType;
 use reserved::Reserved;
 
+// EOF isn't technically a char, but we can use this as a stand in when unwrapping things.
+const EOF: char = '\0';
+
 #[derive(Debug)]
 pub struct Lexer {
     input: String,
@@ -11,12 +14,11 @@ pub struct Lexer {
     char_count: usize
 }
 
-const EOF: char = '\0';
-
 impl Lexer {
     pub fn new(file_contents: String) -> Lexer {
         let r = Reserved::new();
         let c = file_contents.chars().nth(0);
+        println!("{:?}", c);
 
         Lexer {
             input: file_contents,
@@ -42,13 +44,18 @@ impl Lexer {
         // curr_char is guaranteed to be Some here.
         let mut ch = self.curr_char.unwrap();
 
+        if ch == EOF {
+            self.curr_tok = Some(Token::new(TokenType::Eof));
+            return self;
+        }
+
         while ch.is_whitespace() {
             self.get_char();
             if self.curr_char.is_none() {
                 self.curr_tok = Some(Token::new(TokenType::Eof));
                 return self;
             }
-        
+
             ch = self.curr_char.unwrap();
         }
 
@@ -62,7 +69,7 @@ impl Lexer {
             '-' => self.curr_tok = self.get_minus_or_arrow(),
             _   => self.curr_tok = self.lex_word_or_number()
         }
-        
+
         self
     }
 
@@ -76,7 +83,7 @@ impl Lexer {
 
         while ch.is_whitespace() {
             offset = offset + 1;
-        
+
             ch = self.peek(offset).unwrap_or(EOF);
         }
 
@@ -121,7 +128,7 @@ impl Lexer {
     /// Called when a '-' characted is encountered. Checks for a following
     /// '>' character, then returns a token for either a minus sign or an arrow.
     fn get_minus_or_arrow(&mut self) -> Option<Token> {
-        let ch = self.peek(0).unwrap();
+        let ch = self.peek(0).unwrap_or(EOF);
         let tok;
 
         if ch == '>' {
@@ -131,7 +138,7 @@ impl Lexer {
         } else {
             tok = Some(Token::new_from_value(TokenType::Minus, "-".to_string()))
         }
-        
+
         self.get_char();
 
         tok
@@ -145,7 +152,7 @@ impl Lexer {
     /// proper token field to true if the word is reserved, then we can deal with
     /// it during parsing.
     fn lex_word_or_number(&mut self) -> Option<Token> {
-        let mut ch = self.curr_char.unwrap_or(' ');
+        let mut ch = self.curr_char.unwrap_or(EOF);
         let mut ident = ch.to_string();
         let tok;
 
@@ -153,8 +160,8 @@ impl Lexer {
             self.get_char();
 
             while ch.is_alphanumeric() {
-                let append = self.curr_char.unwrap_or(' ');
-                if !append.is_whitespace() {
+                let append = self.curr_char.unwrap_or(EOF);
+                if !append.is_whitespace() && append != EOF {
                     ident = ident + &append.to_string();
                 }
 
@@ -180,8 +187,8 @@ impl Lexer {
             self.get_char();
 
             while ch.is_digit(10) {
-                let append = self.curr_char.unwrap_or(' ');
-                if !append.is_whitespace() {
+                let append = self.curr_char.unwrap_or(EOF);
+                if !append.is_whitespace() && append != EOF {
                     ident = ident + &append.to_string();
                 }
 
