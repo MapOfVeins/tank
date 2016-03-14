@@ -35,9 +35,11 @@ impl Parser {
 
         let mut root_ast = Ast::new(AstType::Template);
 
-        root_ast.children.push(self.element());
+        while self.curr_type != TokenType::Eof {
+            root_ast.children.push(self.element());
+        }
 
-        println!("{:?}", root_ast);
+        println!("{:?}", root_ast.children);
 
         root_ast
     }
@@ -49,29 +51,21 @@ impl Parser {
 
         let mut el_ast = Ast::new(AstType::Element);
 
-        if self.curr_val == "let" {
+        if self.curr_val == "let" {            
             el_ast.children.push(self.assign_expr());
-            // We expect to hit another element here
+            // Advance to next element
             self.get_next_tok();
-            el_ast.children.push(self.element());
         } else if self.lexer.is_next_paren() {
             el_ast.children.push(self.ident());
             self.get_next_tok();
             el_ast.children.push(self.attr_list());
+            
             // Here, we expect the element contents or the next element
-            el_ast.children.push(self.element());
-        } else {
-            let mut content = String::new();
-            while self.curr_type == TokenType::Ident {
-                content = content + &self.curr_val;
-                self.get_next_tok();
-            }
-
-            // We re-assign el_ast to be content now, instead
-            // of pushing this content into the children of a
-            // new element.
-            el_ast = self.el_content(content);
-        }
+            let content_val = self.curr_val.clone();
+            el_ast.children.push(self.el_content(content_val));
+            
+            self.get_next_tok();
+        } 
 
         Box::new(el_ast)
     }
@@ -97,10 +91,10 @@ impl Parser {
         Box::new(num_ast)
     }
 
-    fn el_content(&mut self, content_val: String) -> Ast {
+    fn el_content(&mut self, content_val: String) -> Box<Ast> {
         let content_ast = Ast::new_with_val(AstType::ElContent, content_val);
 
-        content_ast
+        Box::new(content_ast)
     }
 
     fn attr_list(&mut self) -> Box<Ast> {

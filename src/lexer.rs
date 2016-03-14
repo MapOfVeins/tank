@@ -18,7 +18,6 @@ impl Lexer {
     pub fn new(file_contents: String) -> Lexer {
         let r = Reserved::new();
         let c = file_contents.chars().nth(0);
-        println!("{:?}", c);
 
         Lexer {
             input: file_contents,
@@ -158,6 +157,7 @@ impl Lexer {
 
         if ch.is_alphabetic() {
             self.get_char();
+            ch = self.curr_char.unwrap_or(EOF);
 
             while ch.is_alphanumeric() {
                 let append = self.curr_char.unwrap_or(EOF);
