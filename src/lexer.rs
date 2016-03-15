@@ -72,32 +72,12 @@ impl Lexer {
         self
     }
 
-    /// Check if the next char is a left paren. This function skips past any whitespace
-    /// and does not change the lexer's internal char counter. Primarily used by
-    /// the parser to determine if we are parsing an attribute list or the content
-    /// of the current element.
-    pub fn is_next_paren(&mut self) -> bool {
-        let mut ch = self.curr_char.unwrap_or(EOF);
-        let mut offset = self.char_count;
-
-        while ch.is_whitespace() {
-            offset = offset + 1;
-
-            ch = self.peek(offset).unwrap_or(EOF);
-        }
-
-        match ch {
-            '(' => true,
-            _ => false
-        }
-    }
-
     /// Returns the next available char from the file contents. If no
     /// char is available (ie. at end of input, or when the char_count
     /// field is greater than the number of chars in the file), then
     /// None is returned.
     fn get_char(&mut self) -> &mut Lexer {
-        // O(n)
+        //TODO: O(n)
         match self.input.chars().nth(self.char_count) {
             Some(c) => self.curr_char = Some(c),
             None => self.curr_char = None
@@ -173,7 +153,6 @@ impl Lexer {
             let mut some_tok = Token::new_from_value(TokenType::Ident, i);
 
             // Match on reserved words
-            // TODO: separate checking for types here?
             // TODO: way better reserved word handling is needed here.
             // The is_reserved field is not useful.
             match self.reserved.words.get(&ident) {

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Reserved {
-    pub words: HashMap<String, u16>
+    pub words: HashMap<String, String>
 }
 
 // TODO: Better to initialize this hashmap from a constant list (a map is nice
@@ -10,15 +10,15 @@ pub struct Reserved {
 impl Reserved {
     pub fn new() -> Reserved {
         let mut w = HashMap::new();
-        w.insert(String::from("if"), 0);
-        w.insert(String::from("let"), 1);
-        w.insert(String::from("for"), 2);
-        w.insert(String::from("in"), 3);
+        w.insert(String::from("if"), String::from("if"));
+        w.insert(String::from("let"), String::from("let"));
+        w.insert(String::from("for"), String::from("for"));
+        w.insert(String::from("in"), String::from("in"));
 
         // Add types
-        w.insert(String::from("int"), 4);
-        w.insert(String::from("bool"), 5);
-        w.insert(String::from("string"), 6);
+        w.insert(String::from("int"), String::from("int"));
+        w.insert(String::from("bool"), String::from("bool"));
+        w.insert(String::from("string"), String::from("string"));
 
         Reserved {
             words: w

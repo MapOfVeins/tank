@@ -51,21 +51,31 @@ impl Parser {
 
         let mut el_ast = Ast::new(AstType::Element);
 
-        if self.curr_val == "let" {            
-            el_ast.children.push(self.assign_expr());
-            // Advance to next element
-            self.get_next_tok();
-        } else if self.lexer.is_next_paren() {
-            el_ast.children.push(self.ident());
-            self.get_next_tok();
-            el_ast.children.push(self.attr_list());
+        match self.curr_val.as_ref() {
+            "let" => {
+                el_ast.children.push(self.assign_expr());
+                self.get_next_tok();
+            },
+            "if" => {
+                el_ast.children.push(self.if_expr());
+                self.get_next_tok();
+            },
+            "for" => {
+                el_ast.children.push(self.for_expr());
+                self.get_next_tok();
+            },
+            _ => {
+                el_ast.children.push(self.ident());
+                self.get_next_tok();
+                el_ast.children.push(self.attr_list());
+                
+                // Here, we expect the element contents, this node
+                // is empty is the element has no content.
+                el_ast.children.push(self.el_content());
             
-            // Here, we expect the element contents or the next element
-            let content_val = self.curr_val.clone();
-            el_ast.children.push(self.el_content(content_val));
-            
-            self.get_next_tok();
-        } 
+                self.get_next_tok();
+            }
+        }
 
         Box::new(el_ast)
     }
@@ -91,8 +101,8 @@ impl Parser {
         Box::new(num_ast)
     }
 
-    fn el_content(&mut self, content_val: String) -> Box<Ast> {
-        let content_ast = Ast::new_with_val(AstType::ElContent, content_val);
+    fn el_content(&mut self) -> Box<Ast> {
+        let content_ast = Ast::new_with_val(AstType::ElContent, self.curr_val.clone());
 
         Box::new(content_ast)
     }

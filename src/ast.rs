@@ -13,8 +13,8 @@ pub enum AstType {
 pub struct Ast {
     pub ast_type: AstType,
     pub val: String,
-    pub children: Vec<Box<Ast>>,
-    pub var_type: Option<String>
+    pub var_type: Option<String>,
+    pub children: Vec<Box<Ast>>
 }
 
 impl Ast {
@@ -23,8 +23,8 @@ impl Ast {
         Ast {
             ast_type: t,
             val: "".to_string(),
-            children: c,
-            var_type: None
+            var_type: None,
+            children: c
         }
     }
 
@@ -36,8 +36,8 @@ impl Ast {
         Ast {
             ast_type: t,
             val: v,
-            children: c,
-            var_type: None
+            var_type: None,
+            children: c
         }
     }
 }
