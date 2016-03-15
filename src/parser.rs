@@ -68,11 +68,11 @@ impl Parser {
                 el_ast.children.push(self.ident());
                 self.get_next_tok();
                 el_ast.children.push(self.attr_list());
-                
+
                 // Here, we expect the element contents, this node
                 // is empty is the element has no content.
                 el_ast.children.push(self.el_content());
-            
+
                 self.get_next_tok();
             }
         }
@@ -146,8 +146,57 @@ impl Parser {
         Box::new(attr_ast)
     }
 
+    // Expects current token to be "if" when called
+    // TODO: support if true {...}
     fn if_expr(&mut self) -> Box<Ast> {
-        Box::new(Ast::new(AstType::Ident))
+        // Advance to next tok
+        self.get_next_tok();
+
+        let mut if_ast = Ast::new(AstType::IfExpr);
+
+        // Now in conditional statement
+        match self.curr_type {
+            TokenType::Ident => if_ast.children.push(self.ident()),
+            TokenType::Number => if_ast.children.push(self.number()),
+            _ => panic!("tank: Expected an identifier or number at start of if expression")
+        };
+
+        // Advance to operator
+        self.get_next_tok();
+
+        if !self.lexer.is_op(&self.curr_type) {
+            panic!("tank: Expected an operator in if statement");
+        }
+
+        if_ast.val = self.curr_val.clone();
+
+        // Advance to next id or number
+        self.get_next_tok();
+
+        match self.curr_type {
+            TokenType::Ident => if_ast.children.push(self.ident()),
+            TokenType::Number => if_ast.children.push(self.number()),
+            _ => panic!("tank: Expected an identifier or number at end of if expression")
+        };
+
+        self.get_next_tok();
+
+        if self.curr_type == TokenType::LeftBrace {
+            self.get_next_tok();
+        } else {
+            panic!("tank: Expected '{'");
+        }
+
+        // New we're at the inner contents of the if
+        if_ast.children.push(self.element());
+
+        if self.curr_type == TokenType::RightBrace {
+            self.get_next_tok();
+        } else {
+            panic!("tank: Expected '}'");
+        }
+
+        Box::new(if_ast)
     }
 
     fn for_expr(&mut self) -> Box<Ast> {

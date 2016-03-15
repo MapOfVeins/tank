@@ -64,12 +64,31 @@ impl Lexer {
             '(' => self.curr_tok = self.get_token(TokenType::LeftParen),
             ')' => self.curr_tok = self.get_token(TokenType::RightParen),
             ':' => self.curr_tok = self.get_token(TokenType::Colon),
-            '=' => self.curr_tok = self.get_token(TokenType::Equals),
+            '=' => self.curr_tok = self.lex_operator_equals(),
+            '!' => self.curr_tok = self.lex_operator_equals(),
+            '>' => self.curr_tok = self.lex_operator_cmp(),
+            '<' => self.curr_tok = self.lex_operator_cmp(),
             '-' => self.curr_tok = self.get_minus_or_arrow(),
             _   => self.curr_tok = self.lex_word_or_number()
         }
 
         self
+    }
+
+    /// Checks if a token is a valid operator for a comparison statement,
+    /// and returns true if it is.
+    ///
+    /// Single equals sign is not included here.
+    pub fn is_op(&self, token_type: &TokenType) -> bool {
+        match *token_type {
+            TokenType::EqualsEquals => true,
+            TokenType::Gt => true,
+            TokenType::Lt => true,
+            TokenType::GtEquals => true,
+            TokenType::LtEquals => true,
+            TokenType::NotEquals => true,
+            _ => false
+        }
     }
 
     /// Returns the next available char from the file contents. If no
@@ -179,6 +198,64 @@ impl Lexer {
         } else {
             tok = Some(Token::new(TokenType::Eof));
         }
+
+        tok
+    }
+
+    fn lex_operator_equals(&mut self) -> Option<Token> {
+        let ch = self.peek(0).unwrap_or(EOF);
+        let tok;
+
+        match self.curr_char.unwrap() {
+            '=' => {
+                if ch == '=' {
+                    self.get_char();
+                    tok = Some(Token::new_from_value(TokenType::EqualsEquals, "==".to_string()))
+                } else {
+                    tok = Some(Token::new_from_value(TokenType::Equals, "=".to_string()))
+                }
+            },
+            '!' => {
+                if ch == '=' {
+                    self.get_char();
+                    tok = Some(Token::new_from_value(TokenType::NotEquals, "!=".to_string()))
+                } else {
+                    tok = Some(Token::new(TokenType::Eof))
+                }
+            },
+            _ => tok = Some(Token::new(TokenType::Eof))
+        }
+
+        self.get_char();
+
+        tok
+    }
+
+    fn lex_operator_cmp(&mut self) -> Option<Token> {
+        let ch = self.peek(0).unwrap_or(EOF);
+        let tok;
+
+        match self.curr_char.unwrap() {
+            '>' => {
+                if ch == '=' {
+                    self.get_char();
+                    tok = Some(Token::new_from_value(TokenType::GtEquals, ">=".to_string()))
+                } else {
+                    tok = Some(Token::new_from_value(TokenType::Gt, ">".to_string()))
+                }
+            },
+            '<' => {
+                if ch == '=' {
+                    self.get_char();
+                    tok = Some(Token::new_from_value(TokenType::LtEquals, "<=".to_string()))
+                } else {
+                    tok = Some(Token::new_from_value(TokenType::Lt, "<".to_string()))
+                }
+            },
+            _ => tok = Some(Token::new(TokenType::Eof))
+        }
+
+        self.get_char();
 
         tok
     }

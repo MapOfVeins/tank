@@ -6,7 +6,8 @@ pub enum AstType {
     Number,
     AttrList,
     ElContent,
-    AssignExpr
+    AssignExpr,
+    IfExpr
 }
 
 #[derive(Debug)]

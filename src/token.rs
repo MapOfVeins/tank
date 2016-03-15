@@ -10,6 +10,12 @@ pub enum TokenType {
     Arrow,
     Ident,
     Number,
+    EqualsEquals,
+    Gt,
+    Lt,
+    GtEquals,
+    LtEquals,
+    NotEquals,
     Eof
 }
 
@@ -28,7 +34,7 @@ impl Token {
              is_reserved: false
         }
     }
-    
+
     pub fn new_from_value(token_type: TokenType, value: String) -> Token {
         Token {
              tok_type: token_type,

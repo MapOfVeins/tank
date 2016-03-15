@@ -7,3 +7,4 @@
 <for_expr> ::= "for" <id> "in" <id> "{" <element> "}"
 <assign_expr> ::= "let" <id> ":" <type> "=" <id> | <number>
 <type> ::= "string" | "int" | "bool"
+<conditional> ::= <id> | <number> '==' '<' '>' '!=' '<=' '>=' <id> | <number>
