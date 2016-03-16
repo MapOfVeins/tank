@@ -160,7 +160,7 @@ impl Lexer {
 
             while ch.is_alphanumeric() {
                 let append = self.curr_char.unwrap_or(EOF);
-                if !append.is_whitespace() && append != EOF {
+                if append.is_alphanumeric() {
                     ident = ident + &append.to_string();
                 }
 

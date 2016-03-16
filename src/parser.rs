@@ -72,8 +72,6 @@ impl Parser {
                 // Here, we expect the element contents, this node
                 // is empty is the element has no content.
                 el_ast.children.push(self.el_content());
-
-                self.get_next_tok();
             }
         }
 
@@ -199,8 +197,51 @@ impl Parser {
         Box::new(if_ast)
     }
 
+    // Expects current token to be "for"
     fn for_expr(&mut self) -> Box<Ast> {
-        Box::new(Ast::new(AstType::Ident))
+        self.get_next_tok();
+
+        let mut for_ast = Ast::new(AstType::ForExpr);
+
+        match self.curr_type {
+            TokenType::Ident => {
+                for_ast.children.push(self.ident());
+
+                // Advance to 'in' token
+                self.get_next_tok();
+            },
+            _ => panic!("tank: Expected an id in for loop declaration")
+        };
+
+        match self.curr_val.as_ref() {
+            "in" => self.get_next_tok(),
+            _ => panic!("tank: Expected 'in' token in for loop declaration")
+        };
+
+        // Expect another ident here (the containing var)
+        match self.curr_type {
+            TokenType::Ident => {
+                for_ast.val = self.curr_val.clone();
+                self.get_next_tok();
+            },
+            _ => panic!("tank: Expected an id in for loop declaration")
+        };
+
+        // Expect a left brace here
+        match self.curr_type {
+            TokenType::LeftBrace => self.get_next_tok(),
+            _ => panic!("tank: Expected '{'")
+        };
+
+        for_ast.children.push(self.element());
+
+        // Expect a right brace here
+        match self.curr_type {
+            TokenType::RightBrace => self.get_next_tok(),
+            _ => panic!("tank: Expected '}'")
+        };
+
+        Box::new(for_ast)
     }
 
     // Expects current token to be "let" when called.
