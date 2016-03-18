@@ -64,6 +64,7 @@ impl Lexer {
             '(' => self.curr_tok = self.get_token(TokenType::LeftParen),
             ')' => self.curr_tok = self.get_token(TokenType::RightParen),
             ':' => self.curr_tok = self.get_token(TokenType::Colon),
+            '+' => self.curr_tok = self.get_token(TokenType::Plus),
             '=' => self.curr_tok = self.lex_operator_equals(),
             '!' => self.curr_tok = self.lex_operator_equals(),
             '>' => self.curr_tok = self.lex_operator_cmp(),
@@ -73,22 +74,6 @@ impl Lexer {
         }
 
         self
-    }
-
-    /// Checks if a token is a valid operator for a comparison statement,
-    /// and returns true if it is.
-    ///
-    /// Single equals sign is not included here.
-    pub fn is_op(&self, token_type: &TokenType) -> bool {
-        match *token_type {
-            TokenType::EqualsEquals => true,
-            TokenType::Gt => true,
-            TokenType::Lt => true,
-            TokenType::GtEquals => true,
-            TokenType::LtEquals => true,
-            TokenType::NotEquals => true,
-            _ => false
-        }
     }
 
     /// Returns the next available char from the file contents. If no

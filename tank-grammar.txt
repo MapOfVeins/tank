@@ -1,31 +1,19 @@
 <template> ::= <element>
-<element> ::= <id> <attr_list> <element> | <if_expr> | <for_expr> | <assign_expr> | <id>
-<id> ::= "a" | "b" | ... | "z"
-<number> ::= 0 | 1 | ... | 9
-<attr_list> ::= '(' <id> ':' <id> ')' '->'
-<if_expr> ::= "if" <conditional> "{" <element> "}"
-<for_expr> ::= "for" <id> "in" <id> "{" <element> "}"
-<assign_expr> ::= "let" <id> ":" <type> "=" <id> | <number>
-<type> ::= "string" | "int" | "bool"
-<conditional> ::= <id> | <number> '==' '<' '>' '!=' '<=' '>=' <id> | <number>
-
-
-<template> ::= <element>
 <element> ::=   "if" <expr> <element> |
-                "for" <id> "in" <id> <element> |
+                "for" <term> "in" <term> <element> |
                 "{" <element> "}" |
                 "let" <expr> |
-                <id> <attr_list> <element>
-<attr_list> ::= "(" <id> ":" <id> ")" "->"
-<expr> ::= <test> | <id> ":" <type> "=" <expr>
-<test> ::= <sum> |
-           <sum> "<" <sum> |
-           <sum> ">" <sum> |
-           <sum> ">=" <sum> |
-           <sum> "<=" <sum> |
-           <sum> "!=" <sum> |
-           <sum> "==" <sum>
-<sum> ::=  <term> | <sum> "+" <term> | <sum> "-" <term>
+                <term> <attr_list> <element>
+<attr_list> ::= "(" <term> ":" <term> ")" "->"
+<expr> ::= <test> | <term> ":" <type> "=" <expr>
+<test> ::= <op> |
+           <op> "<" <op> |
+           <op> ">" <op> |
+           <op> ">=" <op> |
+           <op> "<=" <op> |
+           <op> "!=" <op> |
+           <op> "==" <op>
+<op> ::=  <term> | <op> "+" <term> | <op> "-" <term>
 <term> ::= <id> | <number> | <expr>
 <id> ::= "a" | "b" | ... | "z"
 <number> ::= 0 | 1 | ... | 9

@@ -1,14 +1,22 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum AstType {
     Template,
     Element,
     Ident,
     Number,
     AttrList,
-    ElContent,
-    AssignExpr,
     IfExpr,
-    ForExpr
+    ForExpr,
+    AssignExpr,
+    Plus,
+    Minus,
+    EqualsEquals,
+    Gt,
+    Lt,
+    GtEquals,
+    LtEquals,
+    NotEquals,
+    Empty
 }
 
 #[derive(Debug)]
