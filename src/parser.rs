@@ -149,26 +149,7 @@ impl Parser {
     }
 
     fn expr(&mut self) -> Box<Ast> {
-        // if self.curr_type != TokenType::Ident {
-        //     return self.test();
-        // }
-
-        let expr_ast = self.test();
-
-        // if expr_ast.ast_type == AstType::Ident && self.curr_type == TokenType::Colon {
-        //     self.get_next_tok();
-        //     let expr_ast_next = expr_ast;
-
-        //     expr_ast = Box::new(Ast::new(AstType::AssignExpr));
-        //     expr_ast.var_type = Some(self.curr_val.clone());
-
-        //     self.get_next_tok();
-
-        //     expr_ast.children.push(expr_ast_next);
-        //     expr_ast.children.push(self.expr());
-        // }
-
-        expr_ast
+        self.test()
     }
 
     fn test(&mut self) -> Box<Ast> {
