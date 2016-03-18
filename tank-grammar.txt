@@ -1,6 +1,5 @@
 <template> ::= <element>
-<element> ::= <id> <attr_list> <el_content> | <if_expr> | <for_expr> | <assign_expr>
-<el_content> :== <id> | <element>
+<element> ::= <id> <attr_list> <element> | <if_expr> | <for_expr> | <assign_expr> | <id>
 <id> ::= "a" | "b" | ... | "z"
 <number> ::= 0 | 1 | ... | 9
 <attr_list> ::= '(' <id> ':' <id> ')' '->'
@@ -9,5 +8,27 @@
 <assign_expr> ::= "let" <id> ":" <type> "=" <id> | <number>
 <type> ::= "string" | "int" | "bool"
 <conditional> ::= <id> | <number> '==' '<' '>' '!=' '<=' '>=' <id> | <number>
+
+
+<template> ::= <element>
+<element> ::=   "if" <expr> <element> |
+                "for" <id> "in" <id> <element> |
+                "{" <element> "}" |
+                "let" <expr> |
+                <id> <attr_list> <element>
+<attr_list> ::= "(" <id> ":" <id> ")" "->"
+<expr> ::= <test> | <id> ":" <type> "=" <expr>
+<test> ::= <sum> |
+           <sum> "<" <sum> |
+           <sum> ">" <sum> |
+           <sum> ">=" <sum> |
+           <sum> "<=" <sum> |
+           <sum> "!=" <sum> |
+           <sum> "==" <sum>
+<sum> ::=  <term> | <sum> "+" <term> | <sum> "-" <term>
+<term> ::= <id> | <number> | <expr>
+<id> ::= "a" | "b" | ... | "z"
+<number> ::= 0 | 1 | ... | 9
+<type> ::= "string" | "int" | "bool"
 
 // Identifier cannot contain ':', '(', ')'

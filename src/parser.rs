@@ -34,10 +34,7 @@ impl Parser {
         }
 
         let mut root_ast = Ast::new(AstType::Template);
-
-        while self.curr_type != TokenType::Eof {
-            root_ast.children.push(self.element());
-        }
+        root_ast.children.push(self.element());
 
         println!("{:?}", root_ast.children);
 
@@ -45,34 +42,47 @@ impl Parser {
     }
 
     fn element(&mut self) -> Box<Ast> {
-        if self.curr_type != TokenType::Ident {
-            panic!("tank: Illegal character found, expected identifier")
-        }
-
         let mut el_ast = Ast::new(AstType::Element);
 
-        match self.curr_val.as_ref() {
-            "let" => {
-                el_ast.children.push(self.assign_expr());
-                self.get_next_tok();
+        match self.curr_type {
+            TokenType::Ident => {
+                match self.curr_val.as_ref() {
+                    "if" => {
+                        self.get_next_tok();
+                        self.expr();
+                        self.element();
+                    },
+                    "for" => {
+                        self.get_next_tok();
+                        self.ident();
+
+                        if (self.curr_val != "in") {
+                            panic!("tank: Parse error - Expected 'in' at for loop");
+                        } else {
+                            self.get_next_tok();
+                        }
+
+                        self.ident();
+                        self.element();
+                    },
+                    "let" => {
+                        self.get_next_tok();
+                        self.expr();
+                    },
+                    _ => {
+                        self.ident();
+                        self.attr_list();
+                        self.element();
+                    }
+                };
             },
-            "if" => {
-                el_ast.children.push(self.if_expr());
+            TokenType::LeftBrace => {
                 self.get_next_tok();
-            },
-            "for" => {
-                el_ast.children.push(self.for_expr());
+                self.element();
                 self.get_next_tok();
             },
             _ => {
-                el_ast.children.push(self.ident());
-                self.get_next_tok();
-                el_ast.children.push(self.attr_list());
-
-                // Here, we expect the element contents, this node
-                // is empty is the element has no content.
-                el_ast.children.push(self.el_content());
-                self.get_next_tok();
+                panic!("tank: Parse error - Unexpected token found");
             }
         }
 
