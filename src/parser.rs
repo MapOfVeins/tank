@@ -72,6 +72,7 @@ impl Parser {
                 // Here, we expect the element contents, this node
                 // is empty is the element has no content.
                 el_ast.children.push(self.el_content());
+                self.get_next_tok();
             }
         }
 

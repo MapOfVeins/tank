@@ -160,6 +160,10 @@ impl Lexer {
 
             while ch.is_alphanumeric() {
                 let append = self.curr_char.unwrap_or(EOF);
+                if !self.is_valid_char_in_ident(append) {
+                    break;
+                }
+
                 if append.is_alphanumeric() {
                     ident = ident + &append.to_string();
                 }
@@ -270,6 +274,14 @@ impl Lexer {
         };
 
         next_ch
+    }
+
+    /// Checks if an identifier contains an illegal character or not.
+    fn is_valid_char_in_ident(&self, ch: char) -> bool {
+        match ch {
+            ':' | '(' | ')' => false,
+            _ => true
+        }
     }
 }
 

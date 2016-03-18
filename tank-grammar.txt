@@ -8,3 +8,5 @@
 <assign_expr> ::= "let" <id> ":" <type> "=" <id> | <number>
 <type> ::= "string" | "int" | "bool"
 <conditional> ::= <id> | <number> '==' '<' '>' '!=' '<=' '>=' <id> | <number>
+
+// Identifier cannot contain ':', '(', ')'
