@@ -16,7 +16,8 @@ pub enum AstType {
     GtEquals,
     LtEquals,
     NotEquals,
-    Empty
+    Empty,
+    Eof
 }
 
 #[derive(Debug)]

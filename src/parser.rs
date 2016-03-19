@@ -28,6 +28,20 @@ impl Parser {
         }
     }
 
+    /// Initiate recursive parsing process. Ast will take the from of Template -> [Element]
+    /// here. Template is the top level ast, and should contain any elements that are not
+    /// nested in other elements. The parsing process will continually call the lex() method
+    /// from the struct's lexer object until EOF is reached.
+    ///
+    /// ### Example ast:
+    ///
+    /// ```
+    /// Ast {ast_type: Template, val: "", children: [
+    ///   Ast { ast_type: Element, val: "", children: [
+    ///        Ast {ast_type: Ident, val: "div", children []}
+    ///   ]}
+    /// ]}
+    /// ```
     pub fn parse(&mut self) -> Ast {
         if self.curr_type == TokenType::Eof {
             panic!("tank: End of input reached, nothing to parse!");
@@ -41,7 +55,23 @@ impl Parser {
         root_ast
     }
 
-    // TODO: error checking better here
+    /// Parse and add an Element ast type to the tree. This method is
+    /// recursive in all cases, and will call itself until no input remains.
+    /// An element ast in tank can contain an html element, a variable assignment,
+    /// an if statement or a for-in statement. In the case that we have no elements
+    /// left to parse, we will append an EOF to the ast indicating the end of input.
+    ///
+    /// ### Example:
+    ///
+    /// ```
+    /// "let x = 10"
+    ///
+    /// Ast {ast_type: Element, val: "", children [
+    ///   Ast { ast_type: Ident, val: "x", children: []},
+    ///   Ast { ast_type: NUmber, val: "10", children[]}
+    /// ]}
+    /// ```
+    // TODO: error checking better here using an expect method
     fn element(&mut self) -> Box<Ast> {
         let mut el_ast = Ast::new(AstType::Element);
         match self.curr_type {
@@ -105,13 +135,16 @@ impl Parser {
                 self.get_next_tok();
             },
             _ => {
-                return Box::new(el_ast);
+                el_ast = Ast::new(AstType::Eof);
             }
         }
 
         Box::new(el_ast)
     }
 
+    /// Parse an attribute list for an html element. An attribute list can contain any number
+    /// of desired html attributes, which do not need to be seperated by commas (a space is fine).
+    /// This method will consume all required punctuation as well.
     fn attr_list(&mut self) -> Box<Ast> {
         let mut attr_ast = Ast::new(AstType::AttrList);
 
@@ -152,6 +185,7 @@ impl Parser {
         self.test()
     }
 
+    /// Parse an intial test inside an expression.
     fn test(&mut self) -> Box<Ast> {
         let mut test_ast = self.op();
 
@@ -182,6 +216,7 @@ impl Parser {
         test_ast
     }
 
+    /// Parse an operation inside an expression. 
     fn op(&mut self) -> Box<Ast> {
         let mut op_ast = self.term();
 
@@ -204,6 +239,8 @@ impl Parser {
         op_ast
     }
 
+    /// Method will parse a term in an expression. This can be a constant identifier
+    /// or number, or could also contain another expression.
     fn term(&mut self) -> Box<Ast> {
         let term_ast;
 
@@ -224,6 +261,10 @@ impl Parser {
         term_ast
     }
 
+    /// Retrieve the next available token for parsing. This token is retrieved from the lexer's
+    /// lex() method. If the next token from the lexer is None, then we return a token
+    /// indicating EOF. We then update the internal value and type fields of the Parser
+    /// struct.
     fn get_next_tok(&mut self) -> &mut Parser {
         self.lexer.lex();
 
