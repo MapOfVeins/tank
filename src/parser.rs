@@ -166,14 +166,9 @@ impl Parser {
         Box::new(attr_ast)
     }
 
-    fn expr(&mut self) -> Box<Ast> {
-        self.test()
-    }
-
     /// Parse an intial test inside an expression.
-    fn test(&mut self) -> Box<Ast> {
+    fn expr(&mut self) -> Box<Ast> {
         let mut test_ast = self.op();
-
         let curr_ast_type = match self.curr_type {
             TokenType::Gt => AstType::Gt,
             TokenType::Lt => AstType::Lt,
@@ -184,9 +179,14 @@ impl Parser {
             TokenType::Colon => {
                 self.get_next_tok();
                 test_ast.var_type = Some(self.curr_val.clone());
+                // Consume the type.
                 self.get_next_tok();
 
                 AstType::AssignExpr
+            },
+            TokenType::Equals => {
+                self.expect(TokenType::Ident);
+                AstType::Empty
             },
             _ => test_ast.ast_type.clone()
         };
@@ -228,7 +228,6 @@ impl Parser {
     /// or number, or could also contain another expression.
     fn term(&mut self) -> Box<Ast> {
         let term_ast;
-
         match self.curr_type {
             TokenType::Ident => {
                 term_ast = Box::new(Ast::new_with_val(AstType::Ident, self.curr_val.clone()));
