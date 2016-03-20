@@ -84,12 +84,13 @@ impl Parser {
                         el_ast.children.push(self.expr());
 
                         // Consume "{"
-                        self.get_next_tok();
+                        self.expect(TokenType::LeftBrace);
 
                         el_ast.children.push(self.element());
 
                         // Consume "}"
-                        self.get_next_tok();
+                        self.expect(TokenType::RightBrace);
+                        
                         el_ast.children.push(self.element());
                     },
                     "for" => {
@@ -132,7 +133,7 @@ impl Parser {
                 el_ast.children.push(self.element());
 
                 // Consume "}"
-                self.get_next_tok();
+                self.expect(TokenType::RightBrace);
             },
             _ => {
                 el_ast = Ast::new(AstType::Eof);
@@ -143,40 +144,24 @@ impl Parser {
     }
 
     /// Parse an attribute list for an html element. An attribute list can contain any number
-    /// of desired html attributes, which do not need to be seperated by commas (a space is fine).
+    /// of desired html attributes, which do not need to be separated by commas (a space is fine).
     /// This method will consume all required punctuation as well.
     fn attr_list(&mut self) -> Box<Ast> {
         let mut attr_ast = Ast::new(AstType::AttrList);
 
-        if self.curr_type == TokenType::LeftParen {
-            self.get_next_tok();
-        } else {
-            panic!("tank: Parse error - Expected '('")
-        }
+        self.expect(TokenType::LeftParen);
 
         while self.curr_type != TokenType::RightParen {
             attr_ast.children.push(self.term());
 
-            if self.curr_type == TokenType::Colon {
-                self.get_next_tok();
-            } else {
-                panic!("tank: Parse error - Expected ':'")
-            }
+            self.expect(TokenType::Colon);
 
             attr_ast.children.push(self.term());
         }
 
-        if self.curr_type == TokenType::RightParen {
-            self.get_next_tok();
-        } else {
-            panic!("tank: Parse error - Expected ')'");
-        }
+        self.expect(TokenType::RightParen);
 
-        if self.curr_type == TokenType::Arrow {
-            self.get_next_tok();
-        } else {
-            panic!("tank: Parse error - Expected '->'");
-        }
+        self.expect(TokenType::Arrow);
 
         Box::new(attr_ast)
     }
@@ -259,6 +244,17 @@ impl Parser {
         }
 
         term_ast
+    }
+
+    /// Match the current token to an expected one. If the current token does not equal
+    /// the expected one, the parser will panic. Otherwise, we will advance to the next
+    /// token and update the parser internals.
+    fn expect(&mut self, token: TokenType) {
+        if self.curr_type == token {
+            self.get_next_tok();
+        } else {
+            panic!("tank: Parse error - Expected {:?}, found {:?}", token, self.curr_type);
+        }
     }
 
     /// Retrieve the next available token for parsing. This token is retrieved from the lexer's
