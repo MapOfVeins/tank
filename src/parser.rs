@@ -38,7 +38,7 @@ impl Parser {
     /// ```
     /// Ast {ast_type: Template, val: "", children: [
     ///   Ast { ast_type: Element, val: "", children: [
-    ///        Ast {ast_type: Ident, val: "div", children []}
+    ///        Ast {ast_type: Ident, val: "div", children: []}
     ///   ]}
     /// ]}
     /// ```
@@ -61,17 +61,29 @@ impl Parser {
     /// an if statement or a for-in statement. In the case that we have no elements
     /// left to parse, we will append an EOF to the ast indicating the end of input.
     ///
-    /// ### Example:
+    /// ### Some Examples:
     ///
     /// ```
-    /// "let x = 10"
+    /// "let x: int = 10"
     ///
     /// Ast {ast_type: Element, val: "", children [
-    ///   Ast { ast_type: Ident, val: "x", children: []},
-    ///   Ast { ast_type: NUmber, val: "10", children[]}
+    ///   Ast {ast_type: AssignExpr, val: "", children: [
+    ///     Ast {ast_type: Ident, val: "x", var_type: Some("int")},
+    ///     Ast (ast_type: Number, val: "10")
+    ///   ]}
     /// ]}
+    ///
+    /// "div() -> content-of-div"
+    ///
+    /// Ast {ast_type: Element, val: "", children: [
+    ///   Ast {ast_type: Ident, val: "div", children: []},
+    ///   Ast {ast_type: AttrList, val: "", children: []},
+    ///   Ast {ast_type: Element, val: "", children: [
+    ///     Ast {ast_type: Ident, val: "contentOfDiv", children: []}
+    ///   ]}
+    /// ]}
+    ///
     /// ```
-    // TODO: error checking better here using an expect method
     fn element(&mut self) -> Box<Ast> {
         let mut el_ast = Ast::new(AstType::Element);
         match self.curr_type {
@@ -90,7 +102,7 @@ impl Parser {
 
                         // Consume "}"
                         self.expect(TokenType::RightBrace);
-                        
+
                         el_ast.children.push(self.element());
                     },
                     "for" => {
@@ -201,7 +213,7 @@ impl Parser {
         test_ast
     }
 
-    /// Parse an operation inside an expression. 
+    /// Parse an operation inside an expression.
     fn op(&mut self) -> Box<Ast> {
         let mut op_ast = self.term();
 
