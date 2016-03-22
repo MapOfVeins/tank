@@ -23,7 +23,7 @@ impl Gen {
 
         let file = match options.open(filename.to_string() + EXT) {
             Ok(file) => file,
-            Err(..) => panic!("tank: unable to open file")
+            Err(..) => panic!("tank: unable to open file {}", filename)
         };
 
         let buf_writer = BufWriter::new(file);
@@ -34,8 +34,24 @@ impl Gen {
         }
     }
 
-    pub fn output(&mut self) -> &mut Gen {
-        self.emit("hello tank");
+    pub fn output(&mut self) {
+        if self.template.ast_type != AstType::Template {
+            panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
+                   self.template.ast_type,
+                   AstType::Template);
+        }
+
+        let child_ast = self.template.children.iter();
+
+        for ast in child_ast {
+            self.gen_element(ast);
+        }
+    }
+
+    fn gen_element(&self, ast: &Box<Ast>) -> &Gen {
+        // Expect first child to be Ident with element name, second child is attribute list
+        // third child is another element, containing either the contents or a
+        // nested element
 
         self
     }
