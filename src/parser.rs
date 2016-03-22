@@ -50,8 +50,6 @@ impl Parser {
         let mut root_ast = Ast::new(AstType::Template);
         root_ast.children.push(self.element());
 
-        println!("{:?}", root_ast.children);
-
         root_ast
     }
 

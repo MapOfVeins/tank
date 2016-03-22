@@ -3,6 +3,7 @@ mod lexer;
 mod reserved;
 mod parser;
 mod ast;
+mod gen;
 
 use std::env;
 use std::path::Path;
@@ -11,6 +12,7 @@ use std::io::Read;
 use std::error::Error;
 
 use parser::Parser;
+use gen::Gen;
 
 fn main() {
     let file_name = env::args().nth(1).unwrap_or_else(|| {
@@ -30,7 +32,10 @@ fn main() {
         Err(error) => panic!("Failed to read {}: {}", display, Error::description(&error)),
         Ok(_) => ()
     }
-    
+
     let mut parser = Parser::new(file_contents);
-    parser.parse();
+    let ast = parser.parse();
+
+    let mut gen = Gen::new(ast, &file_name);
+    gen.output();
 }
