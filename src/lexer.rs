@@ -76,6 +76,21 @@ impl Lexer {
         self
     }
 
+    /// Returns a token built from the current char, without consuming
+    /// those characters. Used by the parser to determine some context
+    /// about element declarations and their contents.
+    ///
+    /// Currently, only checks if the current char is '(', so we can
+    /// decide the difference between an element name and its contents.
+    pub fn peek_tok(&self) -> Token {
+        let tok = match self.curr_char.unwrap_or(EOF) {
+            '(' => Token::new(TokenType::LeftParen),
+            _ => Token::new(TokenType::Eof)
+        };
+
+        tok
+    }
+
     /// Returns the next available char from the file contents. If no
     /// char is available (ie. at end of input, or when the char_count
     /// field is greater than the number of chars in the file), then

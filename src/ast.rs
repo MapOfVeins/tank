@@ -3,6 +3,7 @@ pub enum AstType {
     Template,
     Element,
     Ident,
+    ElementName,
     Number,
     AttrList,
     IfExpr,

@@ -132,7 +132,12 @@ impl Parser {
                             el_ast.children.push(self.attr_list());
                         }
 
-                        el_ast.children.push(self.element());
+                        // Look ahead and see if we have another element
+                        if self.peek() == TokenType::LeftParen {
+                            el_ast.children.push(self.element());
+                        } else {
+                            el_ast.children.push(self.term());
+                        }
                     }
                 };
             },
@@ -240,7 +245,12 @@ impl Parser {
         let term_ast;
         match self.curr_type {
             TokenType::Ident => {
-                term_ast = Box::new(Ast::new_with_val(AstType::Ident, self.curr_val.clone()));
+                // If we find a left paren next, we are declaring an element.
+                let m_type = match self.peek() {
+                    TokenType::LeftParen => AstType::ElementName,
+                    _ => AstType::Ident
+                };
+                term_ast = Box::new(Ast::new_with_val(m_type, self.curr_val.clone()));
                 self.get_next_tok();
             },
             TokenType::Number => {
@@ -281,5 +291,9 @@ impl Parser {
         self.curr_type = tok.tok_type;
 
         self
+    }
+
+    fn peek(&self) -> TokenType {
+        self.lexer.peek_tok().tok_type
     }
 }
