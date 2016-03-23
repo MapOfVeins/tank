@@ -131,7 +131,7 @@ impl Parser {
                         if self.curr_type == TokenType::LeftParen {
                             el_ast.children.push(self.attr_list());
                         }
-        println!("{:?}", self.curr_type);
+
                         // Look ahead and see if we have another element
                         if self.peek() == TokenType::LeftParen {
                             el_ast.children.push(self.element());

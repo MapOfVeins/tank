@@ -10,12 +10,11 @@ use ast::AstType;
 const EXT: &'static str = ".html";
 
 pub struct Gen {
-    template: Ast,
     writer: BufWriter<File>
 }
 
 impl Gen {
-    pub fn new(templ: Ast, filename: &String) -> Gen {
+    pub fn new(filename: &String) -> Gen {
         let mut options = OpenOptions::new();
         options.write(true);
         options.create(true);
@@ -29,31 +28,28 @@ impl Gen {
         let buf_writer = BufWriter::new(file);
 
         Gen {
-            template: templ,
             writer: buf_writer
         }
     }
 
-    pub fn output(&mut self) {
-        if self.template.ast_type != AstType::Template {
+    pub fn output(&mut self, template: Ast) {
+        if template.ast_type != AstType::Template {
             panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
-                   self.template.ast_type,
+                   template.ast_type,
                    AstType::Template);
         }
 
-        if self.template.children.is_empty() {
+        if template.children.is_empty() {
             panic!("tank: Empty ast found, nothing to generate.");
         }
 
-        let child_ast = self.template.children.iter();
-
-        for ast in child_ast {
+        for ast in template.children {
             self.gen_element(&ast);
         }
     }
 
     fn gen_element(&mut self, ast: &Box<Ast>) -> &Gen {
-        if self.template.ast_type != AstType::Element {
+        if ast.ast_type != AstType::Element {
             panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
                    ast.ast_type,
                    AstType::Element);
@@ -62,14 +58,14 @@ impl Gen {
         // Expect first child to be ElementName with element name, second child is attribute list
         // third child is another element, containing either the contents or a
         // nested element. We should be guaranteed to have at least 3 ast types in the children vector.
-        if ast.children.len() != 3 {
+        if ast.children.len() < 3 {
             panic!("tank: Invalid element ast found, not enough children present");
         }
 
         self.gen_el_name(&ast.children[0]);
         self.gen_attr_list(&ast.children[1]);
 
-        match ast.children[3].ast_type {
+        match ast.children[2].ast_type {
             AstType::Element => self.gen_element(&ast.children[2]),
             AstType::Ident => self.gen_el_contents(&ast.children[2]),
             AstType::Eof => self.gen_empty(),
@@ -80,7 +76,7 @@ impl Gen {
     }
 
     fn gen_el_name(&mut self, ast: &Box<Ast>) -> &Gen {
-        self.emit(ast.val.clone());
+        self.emit(&ast.val);
         self
     }
 
@@ -89,7 +85,6 @@ impl Gen {
     }
 
     fn gen_el_contents(&mut self, ast: &Box<Ast>) -> &Gen {
-        //self.emit(ast.val.clone());
         self
     }
 
@@ -97,7 +92,7 @@ impl Gen {
         self
     }
 
-    fn emit(&mut self, output: String) {
+    fn emit(&mut self, output: &String) {
         match write!(self.writer, "{}", output) {
             Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
             Ok(_) => ()

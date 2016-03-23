@@ -36,6 +36,6 @@ fn main() {
     let mut parser = Parser::new(file_contents);
     let ast = parser.parse();
 
-    let mut gen = Gen::new(ast, &file_name);
-    gen.output();
+    let mut gen = Gen::new(&file_name);
+    gen.output(ast);
 }
