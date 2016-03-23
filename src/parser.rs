@@ -131,7 +131,7 @@ impl Parser {
                         if self.curr_type == TokenType::LeftParen {
                             el_ast.children.push(self.attr_list());
                         }
-
+        println!("{:?}", self.curr_type);
                         // Look ahead and see if we have another element
                         if self.peek() == TokenType::LeftParen {
                             el_ast.children.push(self.element());
@@ -257,6 +257,9 @@ impl Parser {
                 term_ast = Box::new(Ast::new_with_val(AstType::Number, self.curr_val.clone()));
                 self.get_next_tok();
             },
+            TokenType::Eof => {
+                term_ast = Box::new(Ast::new(AstType::Eof));
+            },
             _ => {
                 term_ast = self.expr();
             }
@@ -293,6 +296,7 @@ impl Parser {
         self
     }
 
+    /// Check the current token but do not consume it.
     fn peek(&self) -> TokenType {
         self.lexer.peek_tok().tok_type
     }
