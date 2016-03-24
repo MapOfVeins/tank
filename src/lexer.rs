@@ -206,6 +206,10 @@ impl Lexer {
         tok
     }
 
+    /// When we see an '=' or '!' character, we check the next character to determine
+    /// what token to return. If the next token is an '=', then we have a two-character
+    /// operator to use (either NotEquals or EqualsEquals). Otherwise, we can use a single
+    /// '=' character.
     fn lex_operator_equals(&mut self) -> Option<Token> {
         let ch = self.peek(0).unwrap_or(EOF);
         let tok;
@@ -224,6 +228,7 @@ impl Lexer {
                     self.get_char();
                     tok = Some(Token::new_from_value(TokenType::NotEquals, "!=".to_string()))
                 } else {
+                    // TODO: ! operator not supported yet
                     tok = Some(Token::new(TokenType::Eof))
                 }
             },
@@ -235,6 +240,8 @@ impl Lexer {
         tok
     }
 
+    /// Determines if we have a two-character operator with the '>' and '<' characters. Checks
+    /// the following character to see if we need to use GreaterEquals or LessEquals.
     fn lex_operator_cmp(&mut self) -> Option<Token> {
         let ch = self.peek(0).unwrap_or(EOF);
         let tok;
