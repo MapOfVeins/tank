@@ -21,7 +21,7 @@ pub enum AstType {
     Eof
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Ast {
     pub ast_type: AstType,
     pub val: String,

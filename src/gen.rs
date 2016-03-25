@@ -1,7 +1,9 @@
 use std::fs::File;
 use std::fs::OpenOptions;
+
 use std::io::BufWriter;
 use std::io::Write;
+
 use std::error::Error;
 
 use ast::Ast;
@@ -107,13 +109,35 @@ impl Gen {
     }
 
     fn gen_attr_list(&mut self, ast: &Box<Ast>) -> &Gen {
-        if ast.children.is_empty() {
-            self.emit(&CLOSE_SEPARATOR.to_string());
-            self.emit_newline();
-        } else {
-            self.emit_space(0);
+        if !ast.children.is_empty() {
+            self.emit_space(1);
+            let attributes = ast.children.clone();
 
+            // If we're here, we know we have x number of attribute pairs. We will
+            // always have an even number of elements in the attributes vec, otherwise
+            // there would have been a parse error. We split the vec into chunks of
+            // two and emit them as pairs of identifiers.
+            let mut counter = 0;
+
+            for attr_pair in attributes.chunks(2) {
+                let ref attr_key = attr_pair[0];
+                let ref attr_val = attr_pair[1];
+
+                self.emit(&attr_key.val);
+                self.emit(&"=".to_string());
+                self.emit_string(&attr_val.val);
+
+                // We only write a space here if we are not at the end of the attr list.
+                // This space separates the attributes.
+                counter = counter + 2;
+                if counter != attributes.len() {
+                    self.emit_space(1);
+                }
+            }
         }
+
+        self.emit(&CLOSE_SEPARATOR.to_string());
+        self.emit_newline();
 
         self
     }
@@ -158,10 +182,7 @@ impl Gen {
         tag = tag + CLOSE_SEPARATOR;
         tag = tag + "\n";
 
-        match write!(self.writer, "{}", tag) {
-            Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
-            Ok(_) => ()
-        };
+        self.emit(&tag);
     }
 
     fn emit_space(&mut self, count: usize) {
@@ -169,23 +190,25 @@ impl Gen {
             return;
         }
 
-        let mut spaces = String::from(" ");
+        let mut spaces = String::from("");
         let mut i = 0;
         while i < count {
             spaces = spaces + " ";
             i = i + 1;
         }
 
-        match write!(self.writer, "{}", spaces) {
-            Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
-            Ok(_) => ()
-        };
+        self.emit(&spaces);
+    }
+
+    fn emit_string(&mut self, str_val: &String) {
+        let mut val = "\"".to_string();
+        val = val + str_val;
+        val = val + "\"";
+
+        self.emit(&val);
     }
 
     fn emit_newline(&mut self) {
-        match write!(self.writer, "{}", "\n") {
-            Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
-            Ok(_) => ()
-        };
+        self.emit(&"\n".to_string());
     }
 }
