@@ -12,9 +12,17 @@ const OPEN_SEPARATOR: &'static str = "<";
 const CLOSE_SEPARATOR: &'static str = ">";
 const CLOSING_TAG: &'static str = "</";
 
+const INDENTATION_COUNT: usize = 2;
+
+#[derive(Clone)]
+struct Scope {
+    indentation: usize,
+    val: String
+}
+
 pub struct Gen {
     writer: BufWriter<File>,
-    el_stack: Vec<String>
+    el_stack: Vec<Scope>
 }
 
 impl Gen {
@@ -82,7 +90,15 @@ impl Gen {
     }
 
     fn gen_el_name(&mut self, ast: &Box<Ast>) -> &Gen {
-        self.el_stack.push(ast.val.clone());
+        let indentation = self.el_stack.len() * INDENTATION_COUNT;
+
+        let el_scope = Scope {
+            indentation: indentation,
+            val: ast.val.clone()
+        };
+
+        self.el_stack.push(el_scope);
+        self.emit_space(indentation);
 
         self.emit(&OPEN_SEPARATOR.to_string());
         self.emit(&ast.val);
@@ -93,9 +109,9 @@ impl Gen {
     fn gen_attr_list(&mut self, ast: &Box<Ast>) -> &Gen {
         if ast.children.is_empty() {
             self.emit(&CLOSE_SEPARATOR.to_string());
-            self.emit_space();
+            self.emit_newline();
         } else {
-            self.emit_space();
+            self.emit_space(0);
 
         }
 
@@ -103,13 +119,23 @@ impl Gen {
     }
 
     fn gen_el_contents(&mut self, ast: &Box<Ast>) -> &Gen {
+        let indentation = self.el_stack.len() * INDENTATION_COUNT;
+        self.emit_space(indentation + INDENTATION_COUNT);
+
         self.emit(&ast.val);
-        self.emit_space();
+        self.emit_newline();
 
-        // TODO: Error handling here
-        let el_name = self.el_stack.pop().unwrap();
+        // TODO: Clone the stack to avoid borrow :/
+        let mut stack = self.el_stack.clone();
 
-        self.emit_closing_tag(&el_name);
+        // Close all the nested elements so far.
+        let mut scope: Option<Scope> = stack.pop();
+        while scope.is_some() {
+            let name = scope.unwrap();
+            self.emit_space(name.indentation);
+            self.emit_closing_tag(&name.val);
+            scope = stack.pop();
+        }
 
         self
     }
@@ -130,6 +156,7 @@ impl Gen {
         let mut tag = String::from(CLOSING_TAG);
         tag = tag + tag_value;
         tag = tag + CLOSE_SEPARATOR;
+        tag = tag + "\n";
 
         match write!(self.writer, "{}", tag) {
             Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
@@ -137,8 +164,19 @@ impl Gen {
         };
     }
 
-    fn emit_space(&mut self) {
-        match write!(self.writer, "{}", " ") {
+    fn emit_space(&mut self, count: usize) {
+        if count == 0 {
+            return;
+        }
+
+        let mut spaces = String::from(" ");
+        let mut i = 0;
+        while i < count {
+            spaces = spaces + " ";
+            i = i + 1;
+        }
+
+        match write!(self.writer, "{}", spaces) {
             Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
             Ok(_) => ()
         };
