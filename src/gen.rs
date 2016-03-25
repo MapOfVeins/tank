@@ -8,9 +8,13 @@ use ast::Ast;
 use ast::AstType;
 
 const EXT: &'static str = ".html";
+const OPEN_SEPARATOR: &'static str = "<";
+const CLOSE_SEPARATOR: &'static str = ">";
+const CLOSING_TAG: &'static str = "</";
 
 pub struct Gen {
-    writer: BufWriter<File>
+    writer: BufWriter<File>,
+    el_stack: Vec<String>
 }
 
 impl Gen {
@@ -26,9 +30,11 @@ impl Gen {
         };
 
         let buf_writer = BufWriter::new(file);
+        let els = Vec::new();
 
         Gen {
-            writer: buf_writer
+            writer: buf_writer,
+            el_stack: els
         }
     }
 
@@ -59,7 +65,7 @@ impl Gen {
         // third child is another element, containing either the contents or a
         // nested element. We should be guaranteed to have at least 3 ast types in the children vector.
         if ast.children.len() < 3 {
-            panic!("tank: Invalid element ast found, not enough children present");
+            panic!("tank: Invalid Element ast found, not enough children present");
         }
 
         self.gen_el_name(&ast.children[0]);
@@ -76,24 +82,70 @@ impl Gen {
     }
 
     fn gen_el_name(&mut self, ast: &Box<Ast>) -> &Gen {
+        self.el_stack.push(ast.val.clone());
+
+        self.emit(&OPEN_SEPARATOR.to_string());
         self.emit(&ast.val);
+
         self
     }
 
     fn gen_attr_list(&mut self, ast: &Box<Ast>) -> &Gen {
+        if ast.children.is_empty() {
+            self.emit(&CLOSE_SEPARATOR.to_string());
+            self.emit_space();
+        } else {
+            self.emit_space();
+
+        }
+
         self
     }
 
     fn gen_el_contents(&mut self, ast: &Box<Ast>) -> &Gen {
+        self.emit(&ast.val);
+        self.emit_space();
+
+        // TODO: Error handling here
+        let el_name = self.el_stack.pop().unwrap();
+
+        self.emit_closing_tag(&el_name);
+
         self
     }
 
-    fn gen_empty(&self) -> &Gen {
+    fn gen_empty(&mut self) -> &Gen {
+        self.emit_newline();
         self
     }
 
     fn emit(&mut self, output: &String) {
         match write!(self.writer, "{}", output) {
+            Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
+            Ok(_) => ()
+        };
+    }
+
+    fn emit_closing_tag(&mut self, tag_value: &String) {
+        let mut tag = String::from(CLOSING_TAG);
+        tag = tag + tag_value;
+        tag = tag + CLOSE_SEPARATOR;
+
+        match write!(self.writer, "{}", tag) {
+            Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
+            Ok(_) => ()
+        };
+    }
+
+    fn emit_space(&mut self) {
+        match write!(self.writer, "{}", " ") {
+            Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
+            Ok(_) => ()
+        };
+    }
+
+    fn emit_newline(&mut self) {
+        match write!(self.writer, "{}", "\n") {
             Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
             Ok(_) => ()
         };
