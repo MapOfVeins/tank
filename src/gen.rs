@@ -117,18 +117,37 @@ impl Gen {
             // always have an even number of elements in the attributes vec, otherwise
             // there would have been a parse error. We split the vec into chunks of
             // two and emit them as pairs of identifiers.
+            //
+            // We define a counter to count the number of pairs we emit. At the end
+            // of each pair, we must insert a space to separate the next pair from it.
+            // However, at the end of the last pair, we don't want to write a space
+            // because the next character inserted will be the closing tag '>'. we
+            // therefore only write a space if the counter is the same size as the
+            // size of the attributes list.
             let mut counter = 0;
 
             for attr_pair in attributes.chunks(2) {
                 let ref attr_key = attr_pair[0];
                 let ref attr_val = attr_pair[1];
 
+                if attr_key.ast_type != AstType::Ident {
+                    panic!("tank: Wrong ast type found, expected {:?}, found {:?}",
+                           AstType::Ident,
+                           attr_key.ast_type);
+                }
+
+                if attr_val.ast_type != AstType::Ident {
+                    panic!("tank: Wrong ast type found, expected {:?}, found {:?}",
+                           AstType::Ident,
+                           attr_val.ast_type);
+                }
+
                 self.emit(&attr_key.val);
                 self.emit(&"=".to_string());
                 self.emit_string(&attr_val.val);
 
                 // We only write a space here if we are not at the end of the attr list.
-                // This space separates the attributes.
+                // This space separates the attribute pairs.
                 counter = counter + 2;
                 if counter != attributes.len() {
                     self.emit_space(1);
