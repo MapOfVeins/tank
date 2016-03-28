@@ -82,6 +82,19 @@ impl Gen {
                    AstType::Element);
         }
 
+        if ast.children.len() == 0 {
+            panic!("tank: Invalid element found, no children present in ast");
+        }
+
+        let first_child = &ast.children[0];
+
+        // Nothing to generate if we are doing an assignment. Variable value is
+        // already in symbol table.
+        // TODO: type check here maybe?
+        if first_child.ast_type == AstType::AssignExpr {
+            return self;
+        }
+
         // We expect the first child to be ElementName with element name,
         // second child is attribute list, third child is another element,
         // containing either the contents or a nested element.
@@ -237,7 +250,6 @@ impl Gen {
     }
 
     fn gen_empty(&mut self) -> &Gen {
-        self.emitter.newline();
         self
     }
 }

@@ -295,8 +295,8 @@ impl Lexer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use token::Token;
-    use token::TokenType;
+    use syntax::token::Token;
+    use syntax::token::TokenType;
 
     #[test]
     fn test_lex_single_char() {

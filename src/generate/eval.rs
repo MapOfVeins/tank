@@ -48,6 +48,7 @@ impl Evaluator {
         val_pair.0 != val_pair.1
     }
 
+    // TODO: support more complex expressions in if statements
     fn unwrap_ast(&mut self, ast: &Box<Ast>) -> (i64, i64) {
         self.validate_ast(ast);
 
@@ -78,5 +79,145 @@ impl Evaluator {
         if ast.children.len() < 2 {
             panic!("tank: Invalid expression ast found, not enough children");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syntax::ast::Ast;
+    use syntax::ast::AstType;
+    use syntax::symbol_table::SymbolTable;
+
+    const IDENT_NAME: &'static str = "ident";
+    const IDENT_VAL: &'static str = "10";
+
+    fn setup() -> Evaluator {
+        let mut table = SymbolTable::new();
+        let mut ident = Ast::new(AstType::AssignExpr);
+
+        let mut var = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        var.var_type = Some("int".to_owned());
+
+        let var_val = Ast::new_with_val(AstType::Number, IDENT_VAL.to_owned());
+
+        ident.children.push(Box::new(var));
+        ident.children.push(Box::new(var_val));
+
+        table.insert(&Box::new(ident));
+
+        Evaluator::new(table)
+    }
+
+    #[test]
+    fn test_eval_gt_false() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::Gt);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.gt(&Box::new(expr_ast)), false);
+    }
+
+    #[test]
+    fn test_eval_gt_when_true() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::Gt);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "9".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.gt(&Box::new(expr_ast)), true);
+    }
+
+    #[test]
+    fn test_eval_gt_equals() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::GtEquals);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.gt_equals(&Box::new(expr_ast)), false);
+    }
+
+    #[test]
+    fn test_eval_gt_equals_when_equal() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::GtEquals);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "10".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.gt_equals(&Box::new(expr_ast)), true);
+    }
+
+    #[test]
+    fn test_eval_lt() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::Lt);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.lt(&Box::new(expr_ast)), true);
+    }
+
+    #[test]
+    fn test_eval_lt_equals() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::LtEquals);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "9".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.lt_equals(&Box::new(expr_ast)), false);
+    }
+
+    #[test]
+    fn test_eval_equals_equals() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::EqualsEquals);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.equals_equals(&Box::new(expr_ast)), false);
+    }
+
+    #[test]
+    fn test_eval_not_equals() {
+        let mut eval = setup();
+
+        let mut expr_ast = Ast::new(AstType::Gt);
+        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
+        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+
+        expr_ast.children.push(Box::new(ident));
+        expr_ast.children.push(Box::new(value));
+
+        assert_eq!(eval.not_equals(&Box::new(expr_ast)), true);
     }
 }

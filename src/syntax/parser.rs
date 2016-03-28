@@ -38,16 +38,6 @@ impl Parser {
     /// here. Template is the top level ast, and should contain any elements that are not
     /// nested in other elements. The parsing process will continually call the lex() method
     /// from the struct's lexer object until EOF is reached.
-    ///
-    /// ### Example ast:
-    ///
-    /// ```
-    /// Ast {ast_type: Template, val: "", children: [
-    ///   Ast { ast_type: Element, val: "", children: [
-    ///        Ast {ast_type: Ident, val: "div", children: []}
-    ///   ]}
-    /// ]}
-    /// ```
     pub fn parse(&mut self) -> &mut Parser {
         if self.curr_type == TokenType::Eof {
             panic!("tank: End of input reached, nothing to parse!");
@@ -64,30 +54,6 @@ impl Parser {
     /// An element ast in tank can contain an html element, a variable assignment,
     /// an if statement or a for-in statement. In the case that we have no elements
     /// left to parse, we will append an EOF to the ast indicating the end of input.
-    ///
-    /// ### Some Examples:
-    ///
-    /// ```
-    /// "let x: int = 10"
-    ///
-    /// Ast {ast_type: Element, val: "", children [
-    ///   Ast {ast_type: AssignExpr, val: "", children: [
-    ///     Ast {ast_type: Ident, val: "x", var_type: Some("int")},
-    ///     Ast {ast_type: Number, val: "10"}
-    ///   ]}
-    /// ]}
-    ///
-    /// "div() -> content-of-div"
-    ///
-    /// Ast {ast_type: Element, val: "", children: [
-    ///   Ast {ast_type: Ident, val: "div", children: []},
-    ///   Ast {ast_type: AttrList, val: "", children: []},
-    ///   Ast {ast_type: Element, val: "", children: [
-    ///     Ast {ast_type: Ident, val: "contentOfDiv", children: []}
-    ///   ]}
-    /// ]}
-    ///
-    /// ```
     fn element(&mut self) -> Box<Ast> {
         let mut el_ast = Ast::new(AstType::Element);
         match self.curr_type {
@@ -107,7 +73,8 @@ impl Parser {
                         // Consume "}"
                         self.expect(TokenType::RightBrace);
 
-                        el_ast.children.push(self.element());
+                        let next = self.element();
+                        self.root.children.insert(0, next);
                     },
                     "for" => {
                         // Consume "for"
@@ -127,7 +94,6 @@ impl Parser {
                     "let" => {
                         // Consume "let"
                         self.get_next_tok();
-
                         let assign_el = self.expr();
 
                         // Add this variable to the symbol table, and panic
@@ -135,7 +101,8 @@ impl Parser {
                         self.symbol_table.insert(&assign_el);
 
                         el_ast.children.push(assign_el);
-                        el_ast.children.push(self.element());
+                        let next = self.element();
+                        self.root.children.insert(0, next);
                     },
                     _ => {
                         el_ast.children.push(self.term());
