@@ -1,19 +1,11 @@
-use std::fs::File;
 use std::fs::OpenOptions;
-
 use std::io::BufWriter;
 use std::io::Write;
-
-use std::error::Error;
-
 use syntax::ast::Ast;
 use syntax::ast::AstType;
+use generate::emit::Emitter;
 
 const EXT: &'static str = ".html";
-const OPEN_SEPARATOR: &'static str = "<";
-const CLOSE_SEPARATOR: &'static str = ">";
-const CLOSING_TAG: &'static str = "</";
-
 const INDENTATION_COUNT: usize = 2;
 
 #[derive(Clone)]
@@ -23,7 +15,7 @@ struct Scope {
 }
 
 pub struct Gen {
-    writer: BufWriter<File>,
+    emitter: Emitter,
     el_stack: Vec<Scope>
 }
 
@@ -40,10 +32,11 @@ impl Gen {
         };
 
         let buf_writer = BufWriter::new(file);
+        let e = Emitter::new(buf_writer);
         let els = Vec::new();
 
         Gen {
-            writer: buf_writer,
+            emitter: e,
             el_stack: els
         }
     }
@@ -100,17 +93,17 @@ impl Gen {
         };
 
         self.el_stack.push(el_scope);
-        self.emit_space(indentation);
+        self.emitter.space(indentation);
 
-        self.emit(&OPEN_SEPARATOR.to_string());
-        self.emit(&ast.val);
+        self.emitter.left_angle_bracket();
+        self.emitter.emit(&ast.val);
 
         self
     }
 
     fn gen_attr_list(&mut self, ast: &Box<Ast>) -> &Gen {
         if !ast.children.is_empty() {
-            self.emit_space(1);
+            self.emitter.space(1);
             let attributes = ast.children.clone();
 
             // If we're here, we know we have x number of attribute pairs. We will
@@ -142,31 +135,31 @@ impl Gen {
                            attr_val.ast_type);
                 }
 
-                self.emit(&attr_key.val);
-                self.emit(&"=".to_string());
-                self.emit_string(&attr_val.val);
+                self.emitter.emit(&attr_key.val);
+                self.emitter.equals();
+                self.emitter.string(&attr_val.val);
 
                 // We only write a space here if we are not at the end of the attr list.
                 // This space separates the attribute pairs.
                 counter = counter + 2;
                 if counter != attributes.len() {
-                    self.emit_space(1);
+                    self.emitter.space(1);
                 }
             }
         }
 
-        self.emit(&CLOSE_SEPARATOR.to_string());
-        self.emit_newline();
+        self.emitter.right_angle_bracket();
+        self.emitter.newline();
 
         self
     }
 
     fn gen_el_contents(&mut self, ast: &Box<Ast>) -> &Gen {
         let indentation = self.el_stack.len() * INDENTATION_COUNT;
-        self.emit_space(indentation + INDENTATION_COUNT);
+        self.emitter.space(indentation + INDENTATION_COUNT);
 
-        self.emit(&ast.val);
-        self.emit_newline();
+        self.emitter.emit(&ast.val);
+        self.emitter.newline();
 
         // TODO: Clone the stack to avoid borrow :/
         let mut stack = self.el_stack.clone();
@@ -175,8 +168,8 @@ impl Gen {
         let mut scope: Option<Scope> = stack.pop();
         while scope.is_some() {
             let name = scope.unwrap();
-            self.emit_space(name.indentation);
-            self.emit_closing_tag(&name.val);
+            self.emitter.space(name.indentation);
+            self.emitter.close_element(&name.val);
             scope = stack.pop();
         }
 
@@ -184,50 +177,7 @@ impl Gen {
     }
 
     fn gen_empty(&mut self) -> &Gen {
-        self.emit_newline();
+        self.emitter.newline();
         self
-    }
-
-    fn emit(&mut self, output: &String) {
-        match write!(self.writer, "{}", output) {
-            Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
-            Ok(_) => ()
-        };
-    }
-
-    fn emit_closing_tag(&mut self, tag_value: &String) {
-        let mut tag = String::from(CLOSING_TAG);
-        tag = tag + tag_value;
-        tag = tag + CLOSE_SEPARATOR;
-        tag = tag + "\n";
-
-        self.emit(&tag);
-    }
-
-    fn emit_space(&mut self, count: usize) {
-        if count == 0 {
-            return;
-        }
-
-        let mut spaces = String::from("");
-        let mut i = 0;
-        while i < count {
-            spaces = spaces + " ";
-            i = i + 1;
-        }
-
-        self.emit(&spaces);
-    }
-
-    fn emit_string(&mut self, str_val: &String) {
-        let mut val = "\"".to_string();
-        val = val + str_val;
-        val = val + "\"";
-
-        self.emit(&val);
-    }
-
-    fn emit_newline(&mut self) {
-        self.emit(&"\n".to_string());
     }
 }
