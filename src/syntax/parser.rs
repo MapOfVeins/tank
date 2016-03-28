@@ -1,9 +1,9 @@
-use lexer::Lexer;
-use token::Token;
-use token::TokenType;
-use ast::Ast;
-use ast::AstType;
-use symbol_table::SymbolTable;
+use syntax::lexer::Lexer;
+use syntax::token::Token;
+use syntax::token::TokenType;
+use syntax::ast::Ast;
+use syntax::ast::AstType;
+use syntax::symbol_table::SymbolTable;
 
 pub struct Parser {
     lexer: Lexer,

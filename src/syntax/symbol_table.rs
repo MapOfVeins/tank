@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use ast::Ast;
-use ast::AstType;
+use syntax::ast::Ast;
+use syntax::ast::AstType;
 
 const GLOBAL: &'static str = "global";
 

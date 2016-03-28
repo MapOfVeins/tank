@@ -1,6 +1,6 @@
-use token::Token;
-use token::TokenType;
-use reserved::Reserved;
+use syntax::token::Token;
+use syntax::token::TokenType;
+use syntax::reserved::Reserved;
 
 // EOF isn't technically a char, but we can use this as a stand in when unwrapping things.
 const EOF: char = '\0';

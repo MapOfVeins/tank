@@ -1,10 +1,4 @@
-mod token;
-mod lexer;
-mod reserved;
-mod parser;
-mod ast;
-mod gen;
-mod symbol_table;
+extern crate tank;
 
 use std::env;
 use std::path::Path;
@@ -12,9 +6,9 @@ use std::fs::File;
 use std::io::Read;
 use std::error::Error;
 
-use symbol_table::SymbolTable;
-use parser::Parser;
-use gen::Gen;
+use tank::syntax::symbol_table::SymbolTable;
+use tank::syntax::parser::Parser;
+use tank::generate::gen::Gen;
 
 fn main() {
     let file_name = env::args().nth(1).unwrap_or_else(|| {

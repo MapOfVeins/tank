@@ -6,8 +6,8 @@ use std::io::Write;
 
 use std::error::Error;
 
-use ast::Ast;
-use ast::AstType;
+use syntax::ast::Ast;
+use syntax::ast::AstType;
 
 const EXT: &'static str = ".html";
 const OPEN_SEPARATOR: &'static str = "<";
