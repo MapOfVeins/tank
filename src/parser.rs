@@ -3,15 +3,17 @@ use token::Token;
 use token::TokenType;
 use ast::Ast;
 use ast::AstType;
+use symbol_table::SymbolTable;
 
 pub struct Parser {
     lexer: Lexer,
+    symbol_table: SymbolTable,
     curr_val: String,
     curr_type: TokenType
 }
 
 impl Parser {
-    pub fn new(template: String) -> Parser {
+    pub fn new(template: String, table: SymbolTable) -> Parser {
         let mut l = Lexer::new(template);
         l.lex();
         let tok = l.curr_tok
@@ -23,6 +25,7 @@ impl Parser {
 
         Parser {
             lexer: l,
+            symbol_table: table,
             curr_val: tv,
             curr_type: tt,
         }
@@ -67,7 +70,7 @@ impl Parser {
     /// Ast {ast_type: Element, val: "", children [
     ///   Ast {ast_type: AssignExpr, val: "", children: [
     ///     Ast {ast_type: Ident, val: "x", var_type: Some("int")},
-    ///     Ast (ast_type: Number, val: "10")
+    ///     Ast {ast_type: Number, val: "10"}
     ///   ]}
     /// ]}
     ///
@@ -122,7 +125,13 @@ impl Parser {
                         // Consume "let"
                         self.get_next_tok();
 
-                        el_ast.children.push(self.expr());
+                        let assign_el = self.expr();
+
+                        // Add this variable to the symbol table, and panic
+                        // if we already tried to declare it before.
+                        self.symbol_table.insert(&assign_el);
+
+                        el_ast.children.push(assign_el);
                         el_ast.children.push(self.element());
                     },
                     _ => {
