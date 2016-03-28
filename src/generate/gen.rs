@@ -8,7 +8,7 @@ use generate::emit::Emitter;
 const EXT: &'static str = ".html";
 const INDENTATION_COUNT: usize = 2;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Scope {
     indentation: usize,
     val: String
@@ -26,7 +26,7 @@ impl Gen {
         options.create(true);
         options.append(true);
 
-        let file = match options.open(filename.to_string() + EXT) {
+        let file = match options.open(filename.to_owned() + EXT) {
             Ok(file) => file,
             Err(..) => panic!("tank: unable to open file {}", filename)
         };
@@ -53,11 +53,17 @@ impl Gen {
         }
 
         for ast in template.children {
+            // Clear out the element stack, in case the last un-nested element is left over.
+            self.el_stack.clear();
             self.gen_element(&ast);
         }
     }
 
     fn gen_element(&mut self, ast: &Box<Ast>) -> &Gen {
+        if ast.ast_type == AstType::Eof {
+            return self;
+        }
+
         if ast.ast_type != AstType::Element {
             panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
                    ast.ast_type,

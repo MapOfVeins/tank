@@ -32,7 +32,9 @@ fn main() {
 
     let sym_tab = SymbolTable::new();
     let mut parser = Parser::new(file_contents, sym_tab);
-    let ast = parser.parse();
+    parser.parse();
+
+    let ast = parser.root;
 
     let mut gen = Gen::new(&file_name);
     gen.output(ast);

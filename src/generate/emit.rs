@@ -7,6 +7,7 @@ const LEFT_ANGLE_BRACKET: &'static str = "<";
 const RIGHT_ANGLE_BRACKET: &'static str = ">";
 const CLOSING_TAG: &'static str = "</";
 const EQUALS: &'static str = "=";
+const NEWLINE: &'static str = "\n";
 
 pub struct Emitter {
     writer: BufWriter<File>
@@ -42,7 +43,7 @@ impl Emitter {
         let mut tag = String::from(CLOSING_TAG);
         tag = tag + tag_value;
         tag = tag + RIGHT_ANGLE_BRACKET;
-        tag = tag + "\n";
+        tag = tag + NEWLINE;
 
         self.emit(&tag);
     }
@@ -63,7 +64,7 @@ impl Emitter {
     }
 
     pub fn string(&mut self, str_val: &String) {
-        let mut val = "\"".to_string();
+        let mut val = "\"".to_owned();
         val = val + str_val;
         val = val + "\"";
 
@@ -71,6 +72,6 @@ impl Emitter {
     }
 
     pub fn newline(&mut self) {
-        self.emit(&"\n".to_string());
+        self.emit(&NEWLINE.to_owned());
     }
 }

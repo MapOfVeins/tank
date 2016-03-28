@@ -9,7 +9,8 @@ pub struct Parser {
     lexer: Lexer,
     symbol_table: SymbolTable,
     curr_val: String,
-    curr_type: TokenType
+    curr_type: TokenType,
+    pub root: Ast
 }
 
 impl Parser {
@@ -22,12 +23,14 @@ impl Parser {
 
         let tv = tok.val;
         let tt = tok.tok_type;
+        let top = Ast::new(AstType::Template);
 
         Parser {
             lexer: l,
             symbol_table: table,
             curr_val: tv,
             curr_type: tt,
+            root: top
         }
     }
 
@@ -45,15 +48,15 @@ impl Parser {
     ///   ]}
     /// ]}
     /// ```
-    pub fn parse(&mut self) -> Ast {
+    pub fn parse(&mut self) -> &mut Parser {
         if self.curr_type == TokenType::Eof {
             panic!("tank: End of input reached, nothing to parse!");
         }
 
-        let mut root_ast = Ast::new(AstType::Template);
-        root_ast.children.push(self.element());
+        let el = self.element();
+        self.root.children.insert(0, el);
 
-        root_ast
+        self
     }
 
     /// Parse and add an Element ast type to the tree. This method is
@@ -147,6 +150,9 @@ impl Parser {
                         } else {
                             el_ast.children.push(self.term());
                         }
+
+                        let next = self.element();
+                        self.root.children.insert(0, next);
                     }
                 };
             },
