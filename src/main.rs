@@ -36,6 +36,6 @@ fn main() {
 
     let ast = parser.root;
 
-    let mut gen = Gen::new(&file_name);
+    let mut gen = Gen::new(&file_name, parser.symbol_table);
     gen.output(ast);
 }

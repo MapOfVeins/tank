@@ -7,30 +7,30 @@ use syntax::symbol_table::SymbolTable;
 
 pub struct Parser {
     lexer: Lexer,
-    symbol_table: SymbolTable,
+    pub symbol_table: SymbolTable,
     curr_val: String,
     curr_type: TokenType,
     pub root: Ast
 }
 
 impl Parser {
-    pub fn new(template: String, table: SymbolTable) -> Parser {
-        let mut l = Lexer::new(template);
-        l.lex();
-        let tok = l.curr_tok
+    pub fn new(template: String, symbol_table: SymbolTable) -> Parser {
+        let mut m_lexer = Lexer::new(template);
+        m_lexer.lex();
+        let tok = m_lexer.curr_tok
             .take()
             .unwrap_or(Token::new(TokenType::Eof));
 
-        let tv = tok.val;
-        let tt = tok.tok_type;
-        let top = Ast::new(AstType::Template);
+        let m_val = tok.val;
+        let m_type = tok.tok_type;
+        let m_root = Ast::new(AstType::Template);
 
         Parser {
-            lexer: l,
-            symbol_table: table,
-            curr_val: tv,
-            curr_type: tt,
-            root: top
+            lexer: m_lexer,
+            symbol_table: symbol_table,
+            curr_val: m_val,
+            curr_type: m_type,
+            root: m_root
         }
     }
 

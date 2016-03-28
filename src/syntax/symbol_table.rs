@@ -5,11 +5,11 @@ use syntax::ast::AstType;
 
 const GLOBAL: &'static str = "global";
 
-struct Symbol {
-    name: String,
-    sym_type: String,
-    val: String,
-    scope: String
+pub struct Symbol {
+    pub name: String,
+    pub sym_type: String,
+    pub val: String,
+    pub scope: String
 }
 
 pub struct SymbolTable {
@@ -56,11 +56,17 @@ impl SymbolTable {
             name: ident.clone(),
             sym_type: ident_type,
             val: value,
-            scope: GLOBAL.to_string()
+            scope: GLOBAL.to_owned()
         };
 
         self.table.insert(ident, sym);
 
         self
+    }
+
+    /// Wrapper function for getting a Symbol struct from the symbol table. Used for
+    /// convenience and so that the symbol_table struct field is left private.
+    pub fn get(&mut self, key: String) -> Option<&Symbol> {
+        self.table.get(&key)
     }
 }

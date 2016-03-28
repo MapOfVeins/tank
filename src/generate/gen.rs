@@ -3,7 +3,9 @@ use std::io::BufWriter;
 use std::io::Write;
 use syntax::ast::Ast;
 use syntax::ast::AstType;
+use syntax::symbol_table::SymbolTable;
 use generate::emit::Emitter;
+use generate::eval::Evaluator;
 
 const EXT: &'static str = ".html";
 const INDENTATION_COUNT: usize = 2;
@@ -16,11 +18,12 @@ struct Scope {
 
 pub struct Gen {
     emitter: Emitter,
+    eval: Evaluator,
     el_stack: Vec<Scope>
 }
 
 impl Gen {
-    pub fn new(filename: &String) -> Gen {
+    pub fn new(filename: &String, symbol_table: SymbolTable) -> Gen {
         let mut options = OpenOptions::new();
         options.write(true);
         options.create(true);
@@ -32,12 +35,15 @@ impl Gen {
         };
 
         let buf_writer = BufWriter::new(file);
-        let e = Emitter::new(buf_writer);
-        let els = Vec::new();
+        let m_emitter = Emitter::new(buf_writer);
+        let m_el_stack = Vec::new();
+
+        let m_eval = Evaluator::new(symbol_table);
 
         Gen {
-            emitter: e,
-            el_stack: els
+            emitter: m_emitter,
+            eval: m_eval,
+            el_stack: m_el_stack
         }
     }
 
@@ -55,24 +61,31 @@ impl Gen {
         for ast in template.children {
             // Clear out the element stack, in case the last un-nested element is left over.
             self.el_stack.clear();
-            self.gen_element(&ast);
+            self.expr_or_element(&ast);
         }
     }
 
-    fn gen_element(&mut self, ast: &Box<Ast>) -> &Gen {
-        if ast.ast_type == AstType::Eof {
-            return self;
-        }
+    fn expr_or_element(&mut self, ast: &Box<Ast>) -> &Gen {
+        match ast.ast_type {
+            AstType::Element => self.gen_element(ast),
+            AstType::IfExpr => self.gen_if(ast),
+            _ => self.gen_empty()
+        };
 
+        self
+    }
+
+    fn gen_element(&mut self, ast: &Box<Ast>) -> &Gen {
         if ast.ast_type != AstType::Element {
             panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
                    ast.ast_type,
                    AstType::Element);
         }
 
-        // Expect first child to be ElementName with element name, second child is attribute list
-        // third child is another element, containing either the contents or a
-        // nested element. We should be guaranteed to have at least 3 ast types in the children vector.
+        // We expect the first child to be ElementName with element name,
+        // second child is attribute list, third child is another element,
+        // containing either the contents or a nested element.
+        // We should be guaranteed to have at least 3 ast types in the children vector.
         if ast.children.len() < 3 {
             panic!("tank: Invalid Element ast found, not enough children present");
         }
@@ -86,6 +99,47 @@ impl Gen {
             AstType::Eof => self.gen_empty(),
             _ => panic!("tank: Unexpected ast type found")
         };
+
+        self
+    }
+
+    fn gen_if(&mut self, ast: &Box<Ast>) -> &Gen {
+        if ast.ast_type != AstType::IfExpr {
+            panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
+                   ast.ast_type,
+                   AstType::IfExpr);
+        }
+
+        // Expect the first child to be the comparison operator in the if expression,
+        // which itself should have two children containing the left hand term and
+        // right hand term of the expression.
+        //
+        // Following this, we expect another element or expression which is contained
+        // inside the if block.
+        if ast.children.len() == 0 {
+            panic!("tank: Invalid ast found, no children for if expression");
+        }
+
+        let expr = &ast.children[0];
+
+        if expr.children.len() < 2 {
+            panic!("tank: Invalid expression ast found, not enough children in if expression");
+        }
+
+        let is_gen = match expr.ast_type {
+            AstType::Gt => self.eval.gt(expr),
+            AstType::GtEquals => self.eval.gt_equals(expr),
+            AstType::Lt => self.eval.lt(expr),
+            AstType::LtEquals => self.eval.lt_equals(expr),
+            AstType::EqualsEquals => self.eval.equals_equals(expr),
+            AstType::NotEquals => self.eval.not_equals(expr),
+            _ => false
+        };
+
+        if is_gen {
+            let element = &ast.children[1];
+            self.expr_or_element(element);
+        }
 
         self
     }
