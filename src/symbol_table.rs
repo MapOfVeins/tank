@@ -3,10 +3,13 @@ use std::collections::HashMap;
 use ast::Ast;
 use ast::AstType;
 
+const GLOBAL: &'static str = "global";
+
 struct Symbol {
     name: String,
     sym_type: String,
-    val: String
+    val: String,
+    scope: String
 }
 
 pub struct SymbolTable {
@@ -52,7 +55,8 @@ impl SymbolTable {
         let sym = Symbol {
             name: ident.clone(),
             sym_type: ident_type,
-            val: value
+            val: value,
+            scope: GLOBAL.to_string()
         };
 
         self.table.insert(ident, sym);
