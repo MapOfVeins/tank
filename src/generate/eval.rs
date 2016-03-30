@@ -96,10 +96,10 @@ mod tests {
         let mut table = SymbolTable::new();
         let mut ident = Ast::new(AstType::AssignExpr);
 
-        let mut var = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        var.var_type = Some("int".to_owned());
+        let mut var = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        var.var_type = Some(String::from("int"));
 
-        let var_val = Ast::new_with_val(AstType::Number, IDENT_VAL.to_owned());
+        let var_val = Ast::new_from_value(AstType::Number, IDENT_VAL);
 
         ident.children.push(Box::new(var));
         ident.children.push(Box::new(var_val));
@@ -114,8 +114,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::Gt);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "11");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));
@@ -128,8 +128,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::Gt);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "9".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "9");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));
@@ -142,8 +142,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::GtEquals);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "11");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));
@@ -156,8 +156,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::GtEquals);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "10".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "10");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));
@@ -170,8 +170,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::Lt);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "11");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));
@@ -184,8 +184,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::LtEquals);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "9".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "9");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));
@@ -198,8 +198,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::EqualsEquals);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "11");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));
@@ -212,8 +212,8 @@ mod tests {
         let mut eval = setup();
 
         let mut expr_ast = Ast::new(AstType::Gt);
-        let ident = Ast::new_with_val(AstType::Ident, IDENT_NAME.to_owned());
-        let value = Ast::new_with_val(AstType::Number, "11".to_owned());
+        let ident = Ast::new_from_value(AstType::Ident, IDENT_NAME);
+        let value = Ast::new_from_value(AstType::Number, "11");
 
         expr_ast.children.push(Box::new(ident));
         expr_ast.children.push(Box::new(value));

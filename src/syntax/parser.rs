@@ -232,11 +232,11 @@ impl Parser {
                     TokenType::LeftParen => AstType::ElementName,
                     _ => AstType::Ident
                 };
-                term_ast = Box::new(Ast::new_with_val(m_type, self.curr_val.clone()));
+                term_ast = Box::new(Ast::new_from_value(m_type, &self.curr_val));
                 self.get_next_tok();
             },
             TokenType::Number => {
-                term_ast = Box::new(Ast::new_with_val(AstType::Number, self.curr_val.clone()));
+                term_ast = Box::new(Ast::new_from_value(AstType::Number, &self.curr_val));
                 self.get_next_tok();
             },
             TokenType::Eof => {

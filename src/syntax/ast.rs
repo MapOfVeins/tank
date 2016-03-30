@@ -34,7 +34,7 @@ impl Ast {
         let c = Vec::new();
         Ast {
             ast_type: t,
-            val: "".to_string(),
+            val: "".to_owned(),
             var_type: None,
             children: c
         }
@@ -43,11 +43,11 @@ impl Ast {
     /// "Overloaded" new function, used to create a new ast node
     /// but with a defined value instead of using an empty string,
     /// as in the above new() method.
-    pub fn new_with_val(t: AstType, v: String) -> Ast {
+    pub fn new_from_value(t: AstType, v: &str) -> Ast {
         let c = Vec::new();
         Ast {
             ast_type: t,
-            val: v,
+            val: v.to_owned(),
             var_type: None,
             children: c
         }
