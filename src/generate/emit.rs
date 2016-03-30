@@ -8,6 +8,7 @@ const RIGHT_ANGLE_BRACKET: &'static str = ">";
 const CLOSING_TAG: &'static str = "</";
 const EQUALS: &'static str = "=";
 const NEWLINE: &'static str = "\n";
+const QUOTE: &'static str = "\"";
 
 pub struct Emitter {
     writer: BufWriter<File>
@@ -20,7 +21,7 @@ impl Emitter {
         }
     }
 
-    pub fn emit(&mut self, output: &String) {
+    pub fn emit(&mut self, output: &str) {
         match write!(self.writer, "{}", output) {
             Err(error) => panic!("tank: Failed to write -  {}", Error::description(&error)),
             Ok(_) => ()
@@ -28,18 +29,18 @@ impl Emitter {
     }
 
     pub fn left_angle_bracket(&mut self) {
-        self.emit(&LEFT_ANGLE_BRACKET.to_owned());
+        self.emit(LEFT_ANGLE_BRACKET);
     }
 
     pub fn right_angle_bracket(&mut self) {
-        self.emit(&RIGHT_ANGLE_BRACKET.to_owned());
+        self.emit(RIGHT_ANGLE_BRACKET);
     }
 
     pub fn equals(&mut self) {
-        self.emit(&EQUALS.to_owned());
+        self.emit(EQUALS);
     }
 
-    pub fn close_element(&mut self, tag_value: &String) {
+    pub fn close_element(&mut self, tag_value: &str) {
         let mut tag = String::from(CLOSING_TAG);
         tag = tag + tag_value;
         tag = tag + RIGHT_ANGLE_BRACKET;
@@ -63,15 +64,13 @@ impl Emitter {
         self.emit(&spaces);
     }
 
-    pub fn string(&mut self, str_val: &String) {
-        let mut val = "\"".to_owned();
-        val = val + str_val;
-        val = val + "\"";
+    pub fn string(&mut self, str_val: &str) {
+        let val = QUOTE.to_owned() + str_val + QUOTE;
 
         self.emit(&val);
     }
 
     pub fn newline(&mut self) {
-        self.emit(&NEWLINE.to_owned());
+        self.emit(NEWLINE);
     }
 }
