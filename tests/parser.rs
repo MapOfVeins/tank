@@ -41,18 +41,18 @@ fn test_parse_empty_file() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "tank: Parse error")]
 fn test_parse_if_expr_no_left_brace() {
-    let filename = DIR.to_owned() + "if_no_left_brace.tank";
+    let filename = DIR.to_owned() + "if_expr_no_left_brace.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected= "tank: Parse error")]
 fn test_parse_if_expr_no_right_brace() {
-    let filename = DIR.to_owned() + "if_no_right_brace.tank";
+    let filename = DIR.to_owned() + "if_expr_no_right_brace.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
@@ -89,7 +89,7 @@ fn test_parse_if_valid_expr() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "tank: Parse error")]
 #[ignore]
 fn test_parse_element_no_left_paren() {
     let filename = DIR.to_owned() + "el_no_left_paren.tank";
@@ -99,7 +99,7 @@ fn test_parse_element_no_left_paren() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "tank: Parse error")]
 #[ignore]
 fn test_parse_element_no_right_paren() {
     let filename = DIR.to_owned() + "el_no_right_paren.tank";
@@ -165,6 +165,69 @@ fn test_parse_nested_elements() {
 }
 
 #[test]
-fn test_parse_element_with_attribute_list() {
+#[should_panic(expected = "tank: Parse error")]
+fn test_parse_element_with_attribute_list_missing_colon() {
+    let filename = DIR.to_owned() + "el_attr_list_no_colon.tank";
+    let mut parser = setup_parser(filename);
 
+    parser.parse();
+}
+
+#[test]
+fn test_parse_element_with_valid_attribute_list() {
+    let filename = DIR.to_owned() + "el_with_valid_attr_list.tank";
+    let mut parser = setup_parser(filename);
+
+    parser.parse();
+
+    let ast = parser.root;
+    assert!(ast.children.len() > 0);
+
+    let first_element = &ast.children[0];
+    assert_eq!(first_element.ast_type, AstType::Element);
+    assert!(first_element.children.len() > 1);
+
+    let element_name = &first_element.children[0];
+    assert_eq!(element_name.ast_type, AstType::ElementName);
+    assert_eq!(element_name.val, "div".to_owned());
+
+    let attr_list = &first_element.children[1];
+    assert_eq!(attr_list.ast_type, AstType::AttrList);
+    assert_eq!(attr_list.children.len(), 2);
+
+    let attr_name = &attr_list.children[0];
+    let attr_val = &attr_list.children[1];
+
+    assert_eq!(attr_name.val, "class".to_owned());
+    assert_eq!(attr_val.val, "className".to_owned());
+}
+
+#[test]
+#[should_panic(expected = "tank: Parse error")]
+fn test_parse_assign_no_type() {
+    let filename = DIR.to_owned() + "assign_no_type.tank";
+    let mut parser = setup_parser(filename);
+
+    parser.parse();
+}
+
+#[test]
+fn test_parse_assign_valid() {
+    let filename = DIR.to_owned() + "assign_valid.tank";
+    let mut parser = setup_parser(filename);
+
+    parser.parse();
+
+    let element = &parser.root.children[0];
+    assert_eq!(element.ast_type, AstType::Element);
+
+    let assign = &element.children[0];
+    assert_eq!(assign.ast_type, AstType::AssignExpr);
+    assert_eq!(assign.children.len(), 2);
+
+    let ident = &assign.children[0];
+    let val = &assign.children[1];
+
+    assert_eq!(ident.val, "x".to_owned());
+    assert_eq!(val.val, "10".to_owned());
 }
