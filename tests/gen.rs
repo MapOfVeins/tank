@@ -1,6 +1,5 @@
 extern crate tank;
 
-use std::fs;
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
@@ -19,9 +18,24 @@ fn setup_gen(out_filename: &String) -> Gen {
     Gen::new(out_filename, symbol_table)
 }
 
-fn teardown_gen() {
+fn open_gen_output_file() -> String {
     let full_filename = OUT_FILENAME.to_owned() + ".html";
-    fs::remove_file(full_filename);
+
+    let path = Path::new(&full_filename);
+    let display = path.display();
+
+    let mut file = match File::open(&path) {
+        Err(error) => panic!("Failed to open {}: {}", display, Error::description(&error)),
+        Ok(file) => file
+    };
+
+    let mut file_contents = String::new();
+    match file.read_to_string(&mut file_contents) {
+        Err(error) => panic!("Failed to read {}: {}", display, Error::description(&error)),
+        Ok(_) => ()
+    };
+
+    file_contents
 }
 
 #[test]
@@ -78,23 +92,32 @@ fn test_output_should_write_nothing_for_assignment() {
 
     gen.output(valid_ast);
 
-    let full_filename = OUT_FILENAME.to_owned() + ".html";
-
-    let path = Path::new(&full_filename);
-    let display = path.display();
-
-    let mut file = match File::open(&path) {
-        Err(error) => panic!("Failed to open {}: {}", display, Error::description(&error)),
-        Ok(file) => file
-    };
-
-    let mut file_contents = String::new();
-    match file.read_to_string(&mut file_contents) {
-        Err(error) => panic!("Failed to read {}: {}", display, Error::description(&error)),
-        Ok(_) => ()
-    }
+    let file_contents = open_gen_output_file();
 
     assert!(file_contents.is_empty());
+}
 
-    teardown_gen();
+#[test]
+#[should_panic(expected = "tank: Invalid ast found, no children for if expression")]
+fn test_output_invalid_if_expr() {
+    let mut gen = setup_gen(&OUT_FILENAME.to_owned());
+    let mut valid_ast = Ast::new(AstType::Template);
+    let first_child = Box::new(Ast::new(AstType::IfExpr));
+
+    valid_ast.children.push(first_child);
+
+    gen.output(valid_ast);
+}
+
+#[test]
+#[should_panic(expected = "tank: Invalid expression ast found")]
+fn test_output_invalid_if_expr_not_enough_children() {
+    let mut gen = setup_gen(&OUT_FILENAME.to_owned());
+    let mut valid_ast = Ast::new(AstType::Template);
+    let mut first_child = Box::new(Ast::new(AstType::IfExpr));
+
+    first_child.children.push(Box::new(Ast::new(AstType::AssignExpr)));
+    valid_ast.children.push(first_child);
+
+    gen.output(valid_ast);
 }
