@@ -242,6 +242,9 @@ impl Parser {
             TokenType::Eof => {
                 term_ast = Box::new(Ast::new(AstType::Eof));
             },
+            TokenType::Arrow => {
+                panic!("tank: Parse error - Unexpected token {:?} found", self.curr_val);
+            },
             _ => {
                 term_ast = self.expr();
             }

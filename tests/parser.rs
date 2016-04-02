@@ -89,8 +89,7 @@ fn test_parse_if_valid_expr() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Parse error")]
-#[ignore]
+#[should_panic(expected = "tank: Parse error - Unexpected token")]
 fn test_parse_element_no_left_paren() {
     let filename = DIR.to_owned() + "el_no_left_paren.tank";
     let mut parser = setup_parser(filename);
@@ -99,8 +98,7 @@ fn test_parse_element_no_left_paren() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Parse error")]
-#[ignore]
+#[should_panic(expected = "tank: Parse error - Unexpected token")]
 fn test_parse_element_no_right_paren() {
     let filename = DIR.to_owned() + "el_no_right_paren.tank";
     let mut parser = setup_parser(filename);
