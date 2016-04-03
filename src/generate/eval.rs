@@ -2,7 +2,7 @@ use syntax::ast::Ast;
 use syntax::symbol_table::SymbolTable;
 
 pub struct Evaluator {
-    symbol_table: SymbolTable
+    pub symbol_table: SymbolTable
 }
 
 impl Evaluator {

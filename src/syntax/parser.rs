@@ -80,7 +80,17 @@ impl Parser {
                         // Consume "for"
                         self.get_next_tok();
                         el_ast = Ast::new(AstType::ForExpr);
-                        el_ast.children.push(self.term());
+                        let mut first_ident_ast = self.term();
+
+                        self.expect(TokenType::Colon);
+
+                        first_ident_ast.var_type = Some(self.curr_val.clone());
+                        // Add to symbol table
+                        // TODO: Will eventually be unnecessary I think
+                        self.symbol_table.insert_for_id(&first_ident_ast);
+
+                        el_ast.children.push(first_ident_ast);
+                        self.get_next_tok();
 
                         if self.curr_val != "in" {
                             panic!("tank: Parse error - Expected 'in' at for loop");

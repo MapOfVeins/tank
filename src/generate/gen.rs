@@ -69,6 +69,7 @@ impl Gen {
         match ast.ast_type {
             AstType::Element => self.gen_element(ast),
             AstType::IfExpr => self.gen_if(ast),
+            AstType::ForExpr => self.gen_for(ast),
             _ => self.gen_empty()
         };
 
@@ -153,6 +154,43 @@ impl Gen {
             let element = &ast.children[1];
             self.expr_or_element(element);
         }
+
+        self
+    }
+
+    fn gen_for(&mut self, ast: &Box<Ast>) -> &Gen {
+        if ast.ast_type != AstType::ForExpr {
+            panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
+                   ast.ast_type,
+                   AstType::ForExpr);
+        }
+
+        // Expect there to be at least 2 children, each identifier in the
+        // "for" "in" declaration.  Technically the for block can be empty, but normally
+        // we would also expect a third child which is the contents of the block.
+        if ast.children.len() < 2 {
+            panic!("tank: Invalid ast found, not enough children found in for expression");
+        }
+
+        let second_ident = &ast.children[1];
+
+        // Ensure that the second ident is in symbol table. We should have access to this
+        // variable from an inputted file, since we can't yet declare array types inside
+        // tank files.
+        // TODO: accept input configs containing data sources
+        match self.eval.symbol_table.get(second_ident.val.clone()) {
+            Some(_) => (),
+            None => panic!("tank: Error - variable {} is undefined.", second_ident.val)
+        };
+
+        if ast.children.get(2).is_none() {
+            return self;
+        }
+
+        let containing_element = &ast.children[2];
+        // TODO: Insert elements for each loop in this for-in block. Will require
+        // passing in values from the data source and assigning them in the symbol table.
+        self.expr_or_element(containing_element);
 
         self
     }

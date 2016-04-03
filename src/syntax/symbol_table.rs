@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use syntax::ast::Ast;
 use syntax::ast::AstType;
 
-const GLOBAL: &'static str = "global";
+const GLOBAL_SCOPE: &'static str = "global";
+const FOR_SCOPE: &'static str = "for";
 
 pub struct Symbol {
     pub name: String,
@@ -56,7 +57,35 @@ impl SymbolTable {
             name: ident.clone(),
             sym_type: ident_type,
             val: value,
-            scope: GLOBAL.to_owned()
+            scope: GLOBAL_SCOPE.to_owned()
+        };
+
+        self.table.insert(ident, sym);
+
+        self
+    }
+
+    pub fn insert_for_id(&mut self, ast: &Ast) -> &mut SymbolTable {
+        if ast.ast_type != AstType::Ident {
+            panic!("tank: Invalid ast type {:?} found", ast.ast_type);
+        }
+
+        let ident = ast.clone().val;
+
+        match self.table.get(&ident) {
+            Some(sym) => panic!("tank: Redeclared symbol {} found", sym.val),
+            _ => ()
+        };
+
+        let ident_type = ast.var_type.clone().unwrap_or_else(|| {
+            panic!("tank: Variable declared without a type");
+        });
+
+        let sym = Symbol {
+            name: ident.clone(),
+            sym_type: ident_type,
+            val: ident.clone(),
+            scope: FOR_SCOPE.to_owned()
         };
 
         self.table.insert(ident, sym);
