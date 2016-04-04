@@ -125,7 +125,7 @@ impl Parser {
                         if self.peek() == TokenType::LeftParen {
                             el_ast.children.push(self.element());
                         } else {
-                            el_ast.children.push(self.term());
+                            el_ast.children.push(self.contents());
                         }
 
                         let next = self.element();
@@ -261,6 +261,28 @@ impl Parser {
         }
 
         term_ast
+    }
+
+    /// Generates the contents of an element by joining together many identifiers
+    /// separated by spaces.
+    fn contents(&mut self) -> Box<Ast> {
+        if self.curr_type == TokenType::Arrow {
+            panic!("tank: Parse error - Unexpected token {:?} found", self.curr_val);
+        }
+
+        let mut el_contents = String::new();
+
+        while self.curr_type == TokenType::Ident {
+            if self.peek() == TokenType::LeftParen {
+                break;
+            }
+
+            el_contents = el_contents + " " + &self.curr_val;
+            self.get_next_tok();
+        }
+
+        let el_trimmed = el_contents.trim_left();
+        Box::new(Ast::new_from_value(AstType::Ident, &el_trimmed))
     }
 
     /// Match the current token to an expected one. If the current token does not equal
