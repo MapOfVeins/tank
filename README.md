@@ -6,10 +6,12 @@ Tank is an html templating system written in Rust, with syntax similar to Rust i
 A simple example:
 
     div (id:my-div class:styled-div) ->
-        p () -> I'm driving a tank
+        p () -> I am driving a tank
 	
 becomes:
 
     <div id="my-div" class="styled-div">
-        <p> I'm driving a tank </p>
+        <p>
+          I am driving a tank
+        </p>
     </div>
