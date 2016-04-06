@@ -47,6 +47,9 @@ impl Gen {
         }
     }
 
+    /// Generate the contents of an HTML template from the given ast. The contents are written
+    /// to the file provided when creating the generator.  This function will panic if the ast
+    /// does not contain a template, or if the ast is empty.
     pub fn output(&mut self, template: Ast) {
         if template.ast_type != AstType::Template {
             panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
@@ -65,6 +68,8 @@ impl Gen {
         }
     }
 
+    /// Determines if we are currently generating an element or an expression. Simply
+    /// calls the approriate gen function based on the type of the ast.
     fn expr_or_element(&mut self, ast: &Box<Ast>) -> &Gen {
         match ast.ast_type {
             AstType::Element => self.gen_element(ast),
@@ -76,6 +81,10 @@ impl Gen {
         self
     }
 
+    /// Given an Element ast, generate the html contents from it and write to file.
+    /// Expects the given ast to be of type Element, and contain at least 1 child.
+    /// This functions will then be recursively called if the contents of this element
+    /// contain another element.
     fn gen_element(&mut self, ast: &Box<Ast>) -> &Gen {
         if ast.ast_type != AstType::Element {
             panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
@@ -91,7 +100,6 @@ impl Gen {
 
         // Nothing to generate if we are doing an assignment. Variable value is
         // already in symbol table.
-        // TODO: type check here maybe?
         if first_child.ast_type == AstType::AssignExpr {
             return self;
         }
@@ -117,6 +125,10 @@ impl Gen {
         self
     }
 
+    /// Evaluate and in statement and then generate the result. Evaluation of the
+    /// provided ast is performed and if the if-statement conditions are not met,
+    /// we skip the generation phase so that the contents of the if-statement
+    /// are never written to file.
     fn gen_if(&mut self, ast: &Box<Ast>) -> &Gen {
         if ast.ast_type != AstType::IfExpr {
             panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
@@ -195,6 +207,8 @@ impl Gen {
         self
     }
 
+    /// Write the name of an element to file, as well as pushes the name on to the
+    /// element stack. The stack is used to keep track of nested elements.
     fn gen_el_name(&mut self, ast: &Box<Ast>) -> &Gen {
         let indentation = self.el_stack.len() * INDENTATION_COUNT;
 
@@ -212,6 +226,9 @@ impl Gen {
         self
     }
 
+    /// Write all the attribute name-value pairs to file, as well as additional
+    /// characters before the contents of the element. This function will panic
+    /// if non-identifier types are found in the attribute list.
     fn gen_attr_list(&mut self, ast: &Box<Ast>) -> &Gen {
         if !ast.children.is_empty() {
             self.emitter.space(1);
@@ -265,6 +282,9 @@ impl Gen {
         self
     }
 
+    /// Write the contents of an element to file, and also write all applicable closing
+    /// tags. This is done by popping the values in the scope stack until the stack is
+    /// empty.
     fn gen_el_contents(&mut self, ast: &Box<Ast>) -> &Gen {
         let indentation = self.el_stack.len() * INDENTATION_COUNT;
         self.emitter.space(indentation + INDENTATION_COUNT);
