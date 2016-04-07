@@ -7,6 +7,7 @@ pub enum TokenType {
     Colon,
     Equals,
     Minus,
+    Ampersand,
     Arrow,
     Plus,
     Ident,
@@ -36,10 +37,10 @@ impl Token {
         }
     }
 
-    pub fn new_from_value(token_type: TokenType, value: String) -> Token {
+    pub fn new_from_value(token_type: TokenType, value: &str) -> Token {
         Token {
              tok_type: token_type,
-             val: value,
+             val: value.to_owned(),
              is_reserved: false
         }
     }

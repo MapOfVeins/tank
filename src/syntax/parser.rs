@@ -134,13 +134,26 @@ impl Parser {
                 };
             },
             TokenType::LeftBrace => {
-                //  Consume "{"
+                // Consume "{"
                 self.get_next_tok();
 
                 el_ast.children.push(self.element());
 
                 // Consume "}"
                 self.expect(TokenType::RightBrace);
+            },
+            TokenType::Ampersand => {
+                // Consume "&"
+                self.get_next_tok();
+
+                let include_ast = Ast::new_from_value(AstType::Include, &self.curr_val);
+                el_ast.children.push(Box::new(include_ast));
+
+                // Consume filename
+                self.get_next_tok();
+
+                let next = self.element();
+                self.root.children.insert(0, next);
             },
             _ => {
                 el_ast = Ast::new(AstType::Eof);

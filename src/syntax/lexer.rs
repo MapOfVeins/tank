@@ -65,6 +65,7 @@ impl Lexer {
             ')' => self.curr_tok = self.get_token(TokenType::RightParen),
             ':' => self.curr_tok = self.get_token(TokenType::Colon),
             '+' => self.curr_tok = self.get_token(TokenType::Plus),
+            '&' => self.curr_tok = self.get_token(TokenType::Ampersand),
             '=' => self.curr_tok = self.lex_operator_equals(),
             '!' => self.curr_tok = self.lex_operator_equals(),
             '>' => self.curr_tok = self.lex_operator_cmp(),
@@ -114,7 +115,7 @@ impl Lexer {
     /// After a token is created, we advance the current char pointer.
     fn get_token(&mut self, token_type: TokenType) -> Option<Token> {
         let tok = match self.curr_char {
-            Some(c) => Some(Token::new_from_value(token_type, c.to_string())),
+            Some(c) => Some(Token::new_from_value(token_type, &c.to_string())),
             None => Some(Token::new(TokenType::Eof))
         };
 
@@ -132,9 +133,9 @@ impl Lexer {
         if ch == '>' {
             // Consume the '-' char here, the '>' is consumed below.
             self.get_char();
-            tok = Some(Token::new_from_value(TokenType::Arrow, "->".to_string()))
+            tok = Some(Token::new_from_value(TokenType::Arrow, &"->"));
         } else {
-            tok = Some(Token::new_from_value(TokenType::Minus, "-".to_string()))
+            tok = Some(Token::new_from_value(TokenType::Minus, &"-"));
         }
 
         self.get_char();
@@ -172,8 +173,7 @@ impl Lexer {
                 ch = append;
             }
 
-            let i = ident.clone();
-            let mut some_tok = Token::new_from_value(TokenType::Ident, i);
+            let mut some_tok = Token::new_from_value(TokenType::Ident, &ident);
 
             // Match on reserved words
             // TODO: way better reserved word handling is needed here.
@@ -198,7 +198,7 @@ impl Lexer {
                 ch = append;
             }
 
-            tok = Some(Token::new_from_value(TokenType::Number, ident));
+            tok = Some(Token::new_from_value(TokenType::Number, &ident));
         } else {
             tok = Some(Token::new(TokenType::Eof));
         }
@@ -218,15 +218,15 @@ impl Lexer {
             '=' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::EqualsEquals, "==".to_string()))
+                    tok = Some(Token::new_from_value(TokenType::EqualsEquals, &"=="));
                 } else {
-                    tok = Some(Token::new_from_value(TokenType::Equals, "=".to_string()))
+                    tok = Some(Token::new_from_value(TokenType::Equals, &"="));
                 }
             },
             '!' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::NotEquals, "!=".to_string()))
+                    tok = Some(Token::new_from_value(TokenType::NotEquals, &"!="));
                 } else {
                     // TODO: ! operator not supported yet
                     tok = Some(Token::new(TokenType::Eof))
@@ -250,17 +250,17 @@ impl Lexer {
             '>' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::GtEquals, ">=".to_string()))
+                    tok = Some(Token::new_from_value(TokenType::GtEquals, &">="));
                 } else {
-                    tok = Some(Token::new_from_value(TokenType::Gt, ">".to_string()))
+                    tok = Some(Token::new_from_value(TokenType::Gt, &">"));
                 }
             },
             '<' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::LtEquals, "<=".to_string()))
+                    tok = Some(Token::new_from_value(TokenType::LtEquals, &"<="));
                 } else {
-                    tok = Some(Token::new_from_value(TokenType::Lt, "<".to_string()))
+                    tok = Some(Token::new_from_value(TokenType::Lt, &"<"));
                 }
             },
             _ => tok = Some(Token::new(TokenType::Eof))
@@ -304,7 +304,7 @@ mod tests {
         left_brace_lex.lex();
 
         let curr_tok = left_brace_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::LeftBrace, "{".to_string());
+        let expected = Token::new_from_value(TokenType::LeftBrace, &"{");
 
         assert_eq!(curr_tok, expected);
     }
@@ -315,7 +315,7 @@ mod tests {
         arrow_lex.lex();
 
         let curr_tok = arrow_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::Arrow, "->".to_string());
+        let expected = Token::new_from_value(TokenType::Arrow, &"->");
 
         assert_eq!(curr_tok, expected);
     }
@@ -326,7 +326,7 @@ mod tests {
         minus_lex.lex();
 
         let curr_tok_minus = minus_lex.curr_tok.unwrap();
-        let expected_minus = Token::new_from_value(TokenType::Minus, "-".to_string());
+        let expected_minus = Token::new_from_value(TokenType::Minus, &"-");
 
         assert_eq!(curr_tok_minus, expected_minus);
     }
@@ -337,7 +337,7 @@ mod tests {
         ident_lex.lex();
 
         let curr_tok = ident_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::Ident, "testIdentifier".to_string());
+        let expected = Token::new_from_value(TokenType::Ident, &"testIdentifier");
 
         assert_eq!(curr_tok, expected);
     }
@@ -348,7 +348,7 @@ mod tests {
         ident_lex.lex();
 
         let curr_tok = ident_lex.curr_tok.unwrap();
-        let mut expected = Token::new_from_value(TokenType::Ident, "int".to_string());
+        let mut expected = Token::new_from_value(TokenType::Ident, &"int");
         expected.set_reserved(true);
 
         assert_eq!(curr_tok, expected);
@@ -361,7 +361,7 @@ mod tests {
         num_lex.lex();
 
         let curr_tok = num_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::Number, "8080".to_string());
+        let expected = Token::new_from_value(TokenType::Number, &"8080");
 
         assert_eq!(curr_tok, expected);
     }
