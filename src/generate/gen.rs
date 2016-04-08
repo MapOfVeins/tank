@@ -75,6 +75,7 @@ impl Gen {
             AstType::Element => self.gen_element(ast),
             AstType::IfExpr => self.gen_if(ast),
             AstType::ForExpr => self.gen_for(ast),
+            AstType::Include => self.gen_include(ast),
             _ => self.gen_empty()
         };
 
@@ -118,6 +119,7 @@ impl Gen {
         match ast.children[2].ast_type {
             AstType::Element => self.gen_element(&ast.children[2]),
             AstType::Ident => self.gen_el_contents(&ast.children[2]),
+            AstType::Include => self.gen_include(&ast.children[2]),
             AstType::Eof => self.gen_empty(),
             _ => panic!("tank: Unexpected ast type found")
         };
@@ -203,6 +205,19 @@ impl Gen {
         // TODO: Insert elements for each loop in this for-in block. Will require
         // passing in values from the data source and assigning them in the symbol table.
         self.expr_or_element(containing_element);
+
+        self
+    }
+
+    fn gen_include(&mut self, ast: &Box<Ast>) -> &Gen {
+        // Try to open the file with a .html extension. If this file exists,
+        // we assume that we have html already so we can read it into a string
+        // and insert it.
+        //
+        // If the file doesn't exist, then we need to try and open the corresponding
+        // tank template, complile it, and then open the html file and write the contents
+        // to this file.
+        // If we can't find the .tank file, then we panic.
 
         self
     }

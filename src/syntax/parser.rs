@@ -146,8 +146,7 @@ impl Parser {
                 // Consume "&"
                 self.get_next_tok();
 
-                let include_ast = Ast::new_from_value(AstType::Include, &self.curr_val);
-                el_ast.children.push(Box::new(include_ast));
+                el_ast = Ast::new_from_value(AstType::Include, &self.curr_val);
 
                 // Consume filename
                 self.get_next_tok();
@@ -283,19 +282,38 @@ impl Parser {
             panic!("tank: Parse error - Unexpected token {:?} found", self.curr_val);
         }
 
-        let mut el_contents = String::new();
+        match self.curr_type {
+            TokenType::Ident => {
+                let mut el_contents = String::new();
 
-        while self.curr_type == TokenType::Ident {
-            if self.peek() == TokenType::LeftParen {
-                break;
+                while self.curr_type == TokenType::Ident {
+                    if self.peek() == TokenType::LeftParen {
+                        break;
+                    }
+
+                    el_contents = el_contents + " " + &self.curr_val;
+                    self.get_next_tok();
+                }
+
+                let el_trimmed = el_contents.trim_left();
+
+                Box::new(Ast::new_from_value(AstType::Ident, &el_trimmed))
+            },
+            TokenType::Ampersand => {
+                // Consume "&"
+                self.get_next_tok();
+
+                let include_ast = Box::new(Ast::new_from_value(AstType::Include, &self.curr_val));
+
+                // Consume the identifier for the filename now
+                self.get_next_tok();
+
+                include_ast
+            },
+            _ => {
+                Box::new(Ast::new(AstType::Eof))
             }
-
-            el_contents = el_contents + " " + &self.curr_val;
-            self.get_next_tok();
         }
-
-        let el_trimmed = el_contents.trim_left();
-        Box::new(Ast::new_from_value(AstType::Ident, &el_trimmed))
     }
 
     /// Match the current token to an expected one. If the current token does not equal
