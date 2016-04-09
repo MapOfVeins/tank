@@ -1,6 +1,8 @@
 use std::fs::OpenOptions;
 use std::io::BufWriter;
 use std::io::Write;
+use std::io::Read;
+use std::error::Error;
 use syntax::ast::Ast;
 use syntax::ast::AstType;
 use syntax::symbol_table::SymbolTable;
@@ -215,9 +217,43 @@ impl Gen {
         // and insert it.
         //
         // If the file doesn't exist, then we need to try and open the corresponding
-        // tank template, complile it, and then open the html file and write the contents
+        // tank template, compile it, and then open the html file and write the contents
         // to this file.
         // If we can't find the .tank file, then we panic.
+        let mut is_compile = false;
+        let filename = ast.val.to_owned() + EXT;
+        let mut options = OpenOptions::new();
+        options.read(true);
+
+        let mut file = match options.open(filename) {
+            Ok(file) => file,
+            Err(..) => {
+                let tank_filename = ast.val.to_owned() + ".tank";
+                let tank_file = match options.open(&tank_filename) {
+                    Ok(tank_file) => tank_file,
+                    Err(error) => panic!("tank: Unable to open file {}: {}",
+                                         tank_filename,
+                                         Error::description(&error))
+                };
+                is_compile = true;
+                tank_file
+            }
+        };
+
+        if is_compile {
+            // TODO: call compile here.
+            // TODO: Implement a compiler struct to actually call compile
+        } else {
+            // read html file to string and then insert its contents into this file.
+            let mut inserted_html = String::new();
+
+            match file.read_to_string(&mut inserted_html) {
+                Err(error) => panic!("Failed to read file: {}", Error::description(&error)),
+                Ok(_) => ()
+            }
+
+            self.emitter.emit(&inserted_html);
+        }
 
         self
     }
