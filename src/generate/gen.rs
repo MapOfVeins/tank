@@ -30,6 +30,7 @@ impl Gen {
         options.write(true);
         options.create(true);
         options.append(true);
+        options.truncate(true);
 
         let file = match options.open(filename.to_owned() + EXT) {
             Ok(file) => file,
@@ -221,14 +222,19 @@ impl Gen {
         // to this file.
         // If we can't find the .tank file, then we panic.
         let mut is_compile = false;
-        let filename = ast.val.to_owned() + EXT;
+        let mut filename = ast.val.to_owned();
+
+        // Pop off the last char which is a unicode encoded null terminator???
+        filename.pop();
+        let html_filename = filename.to_owned() + EXT;
+
         let mut options = OpenOptions::new();
         options.read(true);
 
-        let mut file = match options.open(filename) {
+        let mut file = match options.open(&html_filename) {
             Ok(file) => file,
             Err(..) => {
-                let tank_filename = ast.val.to_owned() + ".tank";
+                let tank_filename = filename + ".tank";
                 let tank_file = match options.open(&tank_filename) {
                     Ok(tank_file) => tank_file,
                     Err(error) => panic!("tank: Unable to open file {}: {}",
@@ -236,6 +242,7 @@ impl Gen {
                                          Error::description(&error))
                 };
                 is_compile = true;
+
                 tank_file
             }
         };
@@ -253,6 +260,7 @@ impl Gen {
             }
 
             self.emitter.emit(&inserted_html);
+            self.clear_element_stack();
         }
 
         self
@@ -343,16 +351,21 @@ impl Gen {
         self.emitter.emit(&ast.val);
         self.emitter.newline();
 
-        // TODO: Clone the stack to avoid borrow :/
-        let mut stack = self.el_stack.clone();
+        self.clear_element_stack();
 
-        // Close all the nested elements so far.
-        let mut scope: Option<Scope> = stack.pop();
+        self
+    }
+
+    /// Clears all the nested element scopes in the element stack. This function will
+    /// write the closing element tag of each scope found in the stack.
+    fn clear_element_stack(&mut self) -> &Gen {
+        let mut scope: Option<Scope> = self.el_stack.pop();
+
         while scope.is_some() {
             let name = scope.unwrap();
             self.emitter.space(name.indentation);
             self.emitter.close_element(&name.val);
-            scope = stack.pop();
+            scope = self.el_stack.pop();
         }
 
         self

@@ -288,17 +288,15 @@ impl Lexer {
         }
     }
 
+    /// Determine if a char is a valid char in an identifier or in
+    /// the contents of an element.
     fn alphanumeric_or_valid_punc(&self, ch: char) -> bool {
+        if ch.is_whitespace() || ch == EOF {
+            return false;
+        }
+
         if ch.is_alphanumeric() {
             return true;
-        }
-
-        if ch.is_whitespace() {
-            return false;
-        }
-
-        if ch == EOF {
-            return false;
         }
 
         self.is_valid_char_in_ident(ch)
