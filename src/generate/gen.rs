@@ -222,10 +222,7 @@ impl Gen {
         // to this file.
         // If we can't find the .tank file, then we panic.
         let mut is_compile = false;
-        let mut filename = ast.val.to_owned();
-
-        // Pop off the last char which is a unicode encoded null terminator???
-        filename.pop();
+        let filename = ast.val.to_owned();
         let html_filename = filename.to_owned() + EXT;
 
         let mut options = OpenOptions::new();

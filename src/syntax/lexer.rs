@@ -165,7 +165,10 @@ impl Lexer {
                     break;
                 }
 
-                ident = ident + &append.to_string();
+                if append.is_alphanumeric() {
+                    ident = ident + &append.to_string();
+                }
+
                 self.get_char();
                 ch = append;
             }
