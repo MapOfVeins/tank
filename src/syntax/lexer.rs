@@ -159,16 +159,13 @@ impl Lexer {
             self.get_char();
             ch = self.curr_char.unwrap_or(EOF);
 
-            while ch.is_alphanumeric() {
+            while self.alphanumeric_or_valid_punc(ch) {
                 let append = self.curr_char.unwrap_or(EOF);
                 if !self.is_valid_char_in_ident(append) {
                     break;
                 }
 
-                if append.is_alphanumeric() {
-                    ident = ident + &append.to_string();
-                }
-
+                ident = ident + &append.to_string();
                 self.get_char();
                 ch = append;
             }
@@ -289,6 +286,22 @@ impl Lexer {
             ':' | '(' | ')' => false,
             _ => true
         }
+    }
+
+    fn alphanumeric_or_valid_punc(&self, ch: char) -> bool {
+        if ch.is_alphanumeric() {
+            return true;
+        }
+
+        if ch.is_whitespace() {
+            return false;
+        }
+
+        if ch == EOF {
+            return false;
+        }
+
+        self.is_valid_char_in_ident(ch)
     }
 }
 
