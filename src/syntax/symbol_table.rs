@@ -6,6 +6,7 @@ use syntax::ast::AstType;
 const GLOBAL_SCOPE: &'static str = "global";
 const FOR_SCOPE: &'static str = "for";
 
+#[derive(Clone)]
 pub struct Symbol {
     pub name: String,
     pub sym_type: String,
@@ -13,6 +14,7 @@ pub struct Symbol {
     pub scope: String
 }
 
+#[derive(Clone)]
 pub struct SymbolTable {
     table: HashMap<String, Symbol>
 }

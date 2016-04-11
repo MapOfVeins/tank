@@ -246,7 +246,6 @@ impl Gen {
 
         if is_compile {
             // TODO: call compile here.
-            // TODO: Implement a compiler struct to actually call compile
         } else {
             // read html file to string and then insert its contents into this file.
             let mut inserted_html = String::new();
