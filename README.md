@@ -33,4 +33,4 @@ index.tank
 index.html
 
     <section id="header"> Here is the header </section>
-    <div id="welcome-banner"> 
+    <div id="welcome-banner"> Welcome! </div>
