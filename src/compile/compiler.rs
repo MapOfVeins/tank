@@ -29,6 +29,9 @@ impl Compiler {
         }
     }
 
+    /// Given a file and a parser created by the new functions,
+    /// this function compiles a .tank file and writes the output
+    /// to the corresponding .html file.
     pub fn compile(&mut self) -> &Compiler {
         self.parser.parse();
 

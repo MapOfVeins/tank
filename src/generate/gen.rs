@@ -3,9 +3,13 @@ use std::io::BufWriter;
 use std::io::Write;
 use std::io::Read;
 use std::error::Error;
+
+use compile::compiler::Compiler;
+
 use syntax::ast::Ast;
 use syntax::ast::AstType;
 use syntax::symbol_table::SymbolTable;
+
 use generate::emit::Emitter;
 use generate::eval::Evaluator;
 
@@ -212,15 +216,16 @@ impl Gen {
         self
     }
 
+    /// Try to open the file with a .html extension. If this file exists,
+    /// we assume that we have html already so we can read it into a string
+    /// and insert it.
+    ///
+    /// If the file doesn't exist, then we need to try and open the corresponding
+    /// tank template, compile it, and then open the html file and write the contents
+    /// to this file.
+    /// If we can't find the .tank file, then we panic.
     fn gen_include(&mut self, ast: &Box<Ast>) -> &Gen {
-        // Try to open the file with a .html extension. If this file exists,
-        // we assume that we have html already so we can read it into a string
-        // and insert it.
-        //
-        // If the file doesn't exist, then we need to try and open the corresponding
-        // tank template, compile it, and then open the html file and write the contents
-        // to this file.
-        // If we can't find the .tank file, then we panic.
+
         let mut is_compile = false;
         let filename = ast.val.to_owned();
         let html_filename = filename.to_owned() + EXT;
@@ -245,7 +250,12 @@ impl Gen {
         };
 
         if is_compile {
-            // TODO: call compile here.
+            // Create a new compiler struct and use it to compile
+            // the referenced .tank file.
+            let tank_filename = ast.val.to_owned() + ".tank";
+            let mut compiler = Compiler::new(&mut file, &tank_filename);
+
+            compiler.compile();
         } else {
             // read html file to string and then insert its contents into this file.
             let mut inserted_html = String::new();
@@ -255,6 +265,7 @@ impl Gen {
                 Ok(_) => ()
             }
 
+            // Generate the html from the referenced file and clear the element stack.
             self.emitter.emit(&inserted_html);
             self.clear_element_stack();
         }
