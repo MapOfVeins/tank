@@ -14,6 +14,7 @@ use generate::emit::Emitter;
 use generate::eval::Evaluator;
 
 const EXT: &'static str = ".html";
+const TANK_EXT: &'static str = ".tank";
 const INDENTATION_COUNT: usize = 2;
 
 #[derive(Clone, Debug)]
@@ -236,7 +237,7 @@ impl Gen {
         let mut file = match options.open(&html_filename) {
             Ok(file) => file,
             Err(..) => {
-                let tank_filename = filename + ".tank";
+                let tank_filename = filename + TANK_EXT;
                 let tank_file = match options.open(&tank_filename) {
                     Ok(tank_file) => tank_file,
                     Err(error) => panic!("tank: Unable to open file {}: {}",
@@ -252,7 +253,7 @@ impl Gen {
         if is_compile {
             // Create a new compiler struct and use it to compile
             // the referenced .tank file.
-            let tank_filename = ast.val.to_owned() + ".tank";
+            let tank_filename = ast.val.to_owned() + TANK_EXT;
             let mut compiler = Compiler::new(&mut file, &tank_filename);
 
             compiler.compile();
