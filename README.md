@@ -5,16 +5,20 @@ Tank is an html templating system written in Rust, with syntax similar to Rust i
     
 A simple example:
 
-    div (id: my-div class: styled-div) ->
-        p () -> I am driving a tank
-	
+```tank
+div (id: my-div class: styled-div) ->
+    p () -> I am driving a tank
+```
+
 becomes:
 
-    <div id="my-div" class="styled-div">
-        <p>
-          I am driving a tank
-        </p>
-    </div>
+```html
+<div id="my-div" class="styled-div">
+  <p>
+    I am driving a tank
+  </p>
+</div>
+```
     
 ### Including other templates
 
@@ -23,14 +27,20 @@ template to use on multiple pages, you can insert it into your index page like s
 
 header.tank
 
-    section(id: header) -> Here is the header
+```tank
+section(id: header) -> Here is the header
+```
 
 index.tank
 
-    &header
-    div(id: welcome-banner) -> Welcome!
-    
-index.html
+```tank
+&header
+div(id: welcome-banner) -> Welcome!
+```
 
-    <section id="header"> Here is the header </section>
-    <div id="welcome-banner"> Welcome! </div>
+These files together will compile to the following:
+
+```html
+<section id="header"> Here is the header </section>
+<div id="welcome-banner"> Welcome! </div>
+```
