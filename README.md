@@ -44,3 +44,27 @@ These files together will compile to the following:
 <section id="header"> Here is the header </section>
 <div id="welcome-banner"> Welcome! </div>
 ```
+
+### Declaring variables
+
+Variables can be declared inside tank files, and the value can be accessed using the '%' operator:
+
+```tank
+let myVar: int = 10
+div() -> %myVar
+p() -> myVar
+```
+
+becomes:
+
+```html
+<div>
+  10
+</div>
+<p>
+  myVar
+</p>
+```
+
+
+
