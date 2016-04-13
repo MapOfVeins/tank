@@ -8,6 +8,7 @@ pub enum TokenType {
     Equals,
     Minus,
     Ampersand,
+    Percent,
     Arrow,
     Plus,
     Ident,

@@ -126,7 +126,7 @@ impl Gen {
 
         match ast.children[2].ast_type {
             AstType::Element => self.gen_element(&ast.children[2]),
-            AstType::Ident => self.gen_el_contents(&ast.children[2]),
+            AstType::Ident | AstType::VariableValue => self.gen_el_contents(&ast.children[2]),
             AstType::Include => self.gen_include(&ast.children[2]),
             AstType::Eof => self.gen_empty(),
             _ => panic!("tank: Unexpected ast type found")
@@ -353,15 +353,30 @@ impl Gen {
     /// tags. This is done by popping the values in the scope stack until the stack is
     /// empty.
     fn gen_el_contents(&mut self, ast: &Box<Ast>) -> &Gen {
+        let contents = if ast.ast_type == AstType::VariableValue {
+            self.get_var_val(&ast.val)
+        } else {
+            ast.val.clone()
+        };
+
         let indentation = self.el_stack.len() * INDENTATION_COUNT;
         self.emitter.space(indentation + INDENTATION_COUNT);
 
-        self.emitter.emit(&ast.val);
+        self.emitter.emit(&contents);
         self.emitter.newline();
 
         self.clear_element_stack();
 
         self
+    }
+
+    /// Retrieve the value of a variable from the symbol table, and panic
+    /// if the var_name passed in does not exist in the symbol table.
+    fn get_var_val(&mut self, var_name: &String) -> String {
+        match self.eval.symbol_table.get(var_name.to_owned()) {
+            Some(symbol) => symbol.val.to_owned(),
+            None => panic!("tank: Invalid variable '{}' referenced", var_name)
+        }
     }
 
     /// Clears all the nested element scopes in the element stack. This function will

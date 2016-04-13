@@ -66,6 +66,7 @@ impl Lexer {
             ':' => self.curr_tok = self.get_token(TokenType::Colon),
             '+' => self.curr_tok = self.get_token(TokenType::Plus),
             '&' => self.curr_tok = self.get_token(TokenType::Ampersand),
+            '%' => self.curr_tok = self.get_token(TokenType::Percent),
             '=' => self.curr_tok = self.lex_operator_equals(),
             '!' => self.curr_tok = self.lex_operator_equals(),
             '>' => self.curr_tok = self.lex_operator_cmp(),

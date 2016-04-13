@@ -310,6 +310,17 @@ impl Parser {
 
                 include_ast
             },
+            TokenType::Percent => {
+                // Consume "%"
+                self.get_next_tok();
+
+                let var_ast = Box::new(Ast::new_from_value(AstType::VariableValue, &self.curr_val));
+
+                // Consume identifier
+                self.get_next_tok();
+
+                var_ast
+            },
             _ => {
                 Box::new(Ast::new(AstType::Eof))
             }

@@ -9,6 +9,7 @@ pub enum AstType {
     IfExpr,
     ForExpr,
     AssignExpr,
+    VariableValue,
     Include,
     Plus,
     Minus,
