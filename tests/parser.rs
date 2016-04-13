@@ -229,3 +229,45 @@ fn test_parse_assign_valid() {
     assert_eq!(ident.val, "x".to_owned());
     assert_eq!(val.val, "10".to_owned());
 }
+
+#[test]
+fn test_parse_variable_value() {
+    let filename = DIR.to_owned() + "variable_value.tank";
+    let mut parser = setup_parser(filename);
+
+    parser.parse();
+
+    let element = &parser.root.children[0];
+    assert_eq!(element.ast_type, AstType::Element);
+
+    let var = &element.children[2];
+    assert_eq!(var.ast_type, AstType::VariableValue);
+    assert_eq!(var.val, "myVar".to_owned());
+}
+
+#[test]
+fn test_parse_include_no_contents() {
+    let filename = DIR.to_owned() + "include_no_contents.tank";
+    let mut parser = setup_parser(filename);
+
+    parser.parse();
+
+    let include = &parser.root.children[0];
+    assert_eq!(include.ast_type, AstType::Include);
+    assert_eq!(include.val, "includedFile".to_owned());
+}
+
+#[test]
+fn test_parse_include_in_contents() {
+    let filename = DIR.to_owned() + "include_in_contents.tank";
+    let mut parser = setup_parser(filename);
+
+    parser.parse();
+
+    let element = &parser.root.children[0];
+    assert_eq!(element.ast_type, AstType::Element);
+
+    let include = &element.children[2];
+    assert_eq!(include.ast_type, AstType::Include);
+    assert_eq!(include.val, "includedFile".to_owned());
+}
