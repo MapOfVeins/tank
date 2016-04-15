@@ -1,8 +1,7 @@
 ## Tank
 
-Tank is an html templating system written in Rust, with syntax similar to Rust itself.
+Tank is an html templating system written in Rust, with syntax similar to Rust itself. Tank can run as a binary on Linux machines (and maybe as a cargo package one day).
 
-    
 A simple example:
 
 ```tank
@@ -18,6 +17,27 @@ becomes:
     I am driving a tank
   </p>
 </div>
+```
+### Running from Source
+
+After getting the source, change to the top level tank directory and build using cargo:
+
+```bash
+cd tank
+cargo build
+```
+
+To run, use cargo and pass in your tank file as an argument:
+```bash
+cargo run myTankFile.tank
+tank: Compiling 'myTankFile.tank'...
+```
+
+### Running Tests
+
+Tests for tank can all be run using cargo as well. From the top level tank directory:
+```bash
+cargo test
 ```
     
 ### Including other templates
