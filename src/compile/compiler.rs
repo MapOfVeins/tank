@@ -33,6 +33,7 @@ impl Compiler {
     /// this function compiles a .tank file and writes the output
     /// to the corresponding .html file.
     pub fn compile(&mut self) -> &Compiler {
+        println!("tank: Compiling '{}'...", &self.filename);
         self.parser.parse();
 
         let ast = &self.parser.root;
