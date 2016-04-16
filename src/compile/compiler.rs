@@ -15,6 +15,12 @@ impl Compiler {
     pub fn new(m_file: &mut File, filename: &String) -> Compiler {
         // TODO: Read file by lines instead of into a string?
         let mut file_contents = String::new();
+
+        let metadata = match m_file.metadata() {
+            Ok(data) => data,
+            Err(error) => panic!("Failed to get metadata for {}: {}", &filename, Error::description(&error))
+        };
+
         match m_file.read_to_string(&mut file_contents) {
             Err(error) => panic!("Failed to read {}: {}", &filename, Error::description(&error)),
             Ok(_) => ()

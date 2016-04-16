@@ -9,7 +9,7 @@ use tank::compile::compiler::Compiler;
 
 fn main() {
     let file_name = env::args().nth(1).unwrap_or_else(|| {
-        panic!("tank: Expected a file name as the first arg.");
+        panic!("tank: Expected a file or directory name as the first arg.");
     });
 
     let path = Path::new(&file_name);
