@@ -32,6 +32,39 @@ impl Compiler {
         }
     }
 
+    /// Create a new compiler using a JSON "config" file. This file is
+    /// expected to contain other variables or information not declared
+    /// within the template expected to be compiled. The scoping of these
+    /// config vars will be global for the current file.
+    pub fn from_config_file(m_file: &mut File,
+                            filename: &String,
+                            config_file: &mut File) -> Compiler {
+        let mut config_file_contents = String::new();
+        match config_file.read_to_string(&mut config_file_contents) {
+            Err(error) => panic!("Failed to read config file: {}",
+                                 Error::description(&error)),
+            Ok(_) => ()
+        }
+
+        //TODO: Fill symbol table with variables from config file.
+        let sym_tab = SymbolTable::new();
+
+        let mut file_contents = String::new();
+        match m_file.read_to_string(&mut file_contents) {
+            Err(error) => panic!("Failed to read {}: {}",
+                                 &filename,
+                                 Error::description(&error)),
+            Ok(_) => ()
+        }
+
+        let parser = Parser::new(file_contents, sym_tab);
+
+        Compiler {
+            parser: parser,
+            filename: filename.to_owned()
+        }
+    }
+
     /// Given a file and a parser created by the new functions,
     /// this function compiles a .tank file and writes the output
     /// to the corresponding .html file.

@@ -276,7 +276,8 @@ impl Parser {
     }
 
     /// Generates the contents of an element by joining together many identifiers
-    /// separated by spaces.
+    /// separated by spaces.  Also will consume references to other files within
+    /// the element contents and interpolate variables.
     fn contents(&mut self) -> Box<Ast> {
         if self.curr_type == TokenType::Arrow {
             panic!("tank: Parse error - Unexpected token {:?} found", self.curr_val);
