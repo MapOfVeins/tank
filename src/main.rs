@@ -51,29 +51,38 @@ fn main() {
                 Ok(file) => file
             };
 
-            let file_name = path.to_str().unwrap().to_owned();
+            let incl_filename = path.to_str().unwrap().to_owned();
+            let conf_filename_copy = config_filename.clone();
 
-            // TODO: Add conf file if necessary here
-            let mut compiler = Compiler::new(&mut file, &file_name);
+            let mut compiler = if conf_filename_copy.is_some() {
+                get_compiler_from_conf(file, &filename, conf_filename_copy)
+            } else {
+                Compiler::new(&mut file, &incl_filename)
+            };
+
             compiler.compile();
         }
     } else {
-        if config_filename.is_some() {
-            let conf_name = config_filename.unwrap();
-
-            let conf_path = Path::new(&conf_name);
-            let mut conf_file = match File::open(&conf_path) {
-                Err(error) => panic!("Failed to open {}: {}",
-                                     conf_path.display(),
-                                     Error::description(&error)),
-                Ok(file) => file
-            };
-
-            let mut compiler = Compiler::from_config_file(&mut file, &filename, &mut conf_file);
-            compiler.compile();
+        let mut compiler = if config_filename.is_some() {
+            get_compiler_from_conf(file, &filename, config_filename)
         } else {
-            let mut compiler = Compiler::new(&mut file, &filename);
-            compiler.compile();
-        }
+            Compiler::new(&mut file, &filename)
+        };
+
+        compiler.compile();
     }
+}
+
+fn get_compiler_from_conf(mut file: File, filename: &String, conf_filename: Option<String>) -> Compiler {
+    let conf_name = conf_filename.unwrap();
+
+    let conf_path = Path::new(&conf_name);
+    let mut conf_file = match File::open(&conf_path) {
+        Err(error) => panic!("Failed to open {}: {}",
+                             conf_path.display(),
+                             Error::description(&error)),
+        Ok(file) => file
+    };
+
+    Compiler::from_config_file(&mut file, &filename, &mut conf_file)
 }
