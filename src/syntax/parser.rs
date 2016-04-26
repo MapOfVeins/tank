@@ -121,13 +121,21 @@ impl Parser {
                             el_ast.children.push(self.attr_list());
                         }
 
-                        // Look ahead and see if we have another element
-                        if self.peek() == TokenType::LeftParen {
-                            el_ast.children.push(self.element());
-                        } else {
-                            el_ast.children.push(self.contents());
+                        // consume "{"
+                        self.expect(TokenType::LeftBrace);
+
+                        while self.curr_type != TokenType::RightBrace {
+                            // Look ahead and see if we have another element
+                            if self.peek() == TokenType::LeftParen {
+                                el_ast.children.push(self.element());
+                            } else {
+                                el_ast.children.push(self.contents());
+                            }
                         }
 
+                        // consume "}"
+                        self.expect(TokenType::RightBrace);
+                        
                         let next = self.element();
                         self.root.children.insert(0, next);
                     }
