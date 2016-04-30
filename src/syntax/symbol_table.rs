@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use syntax::ast::Ast;
 use syntax::ast::AstType;
@@ -22,6 +23,27 @@ pub struct SymbolTable {
 impl SymbolTable {
     pub fn new() -> SymbolTable {
         let symbols = HashMap::new();
+
+        SymbolTable {
+            table: symbols
+        }
+    }
+
+    /// Creates a new symbol table from an existing map. Expects this map
+    /// to be serialized from a json input file when tank is run.
+    pub fn from_existing_map(map: &BTreeMap<String, String>) -> SymbolTable {
+        let mut symbols = HashMap::new();
+
+        for (k, v) in map.iter() {
+            let sym = Symbol {
+                name: k.to_owned(),
+                sym_type: "String".to_owned(),
+                val: v.to_owned(),
+                scope: GLOBAL_SCOPE.to_owned()
+            };
+            
+            symbols.insert(k.to_owned(), sym);
+        }
 
         SymbolTable {
             table: symbols

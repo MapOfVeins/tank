@@ -1,6 +1,10 @@
+extern crate serde;
+extern crate serde_json;
+
 use std::fs::File;
 use std::error::Error;
 use std::io::Read;
+use std::collections::BTreeMap;
 
 use syntax::parser::Parser;
 use syntax::symbol_table::SymbolTable;
@@ -46,10 +50,11 @@ impl Compiler {
             Ok(_) => ()
         }
 
-        //TODO: Fill symbol table with variables from config file.
-        let sym_tab = SymbolTable::new();
-
+        let input_map: BTreeMap<String, String> = serde_json::from_str(&config_file_contents)
+            .unwrap();
+        let sym_tab = SymbolTable::from_existing_map(&input_map);
         let mut file_contents = String::new();
+        
         match m_file.read_to_string(&mut file_contents) {
             Err(error) => panic!("Failed to read {}: {}",
                                  &filename,

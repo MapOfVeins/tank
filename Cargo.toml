@@ -2,3 +2,7 @@
 name = "tank"
 version = "0.1.0"
 authors = ["cjkenned <cam.j.kennedy@gmail.com>"]
+
+[dependencies]
+serde = "*"
+serde_json = "*"

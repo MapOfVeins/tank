@@ -73,7 +73,12 @@ fn main() {
     }
 }
 
-fn get_compiler_from_conf(mut file: File, filename: &String, conf_filename: Option<String>) -> Compiler {
+/// Create a new compiler from a "configuration" file. This file
+/// contains variables for use in templates in a global scope.
+fn get_compiler_from_conf(mut file: File,
+                          filename: &String,
+                          conf_filename: Option<String>)
+                          -> Compiler {
     let conf_name = conf_filename.unwrap();
 
     let conf_path = Path::new(&conf_name);
