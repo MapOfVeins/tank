@@ -126,7 +126,7 @@ impl Gen {
 
         match ast.children[2].ast_type {
             AstType::Element => self.gen_element(&ast.children[2]),
-            AstType::Ident | AstType::VariableValue => self.gen_el_contents(&ast.children[2]),
+            AstType::Contents | AstType::VariableValue => self.gen_el_contents(&ast.children[2]),
             AstType::Include => self.gen_include(&ast.children[2]),
             AstType::Eof => self.gen_empty(),
             _ => panic!("tank: Unexpected ast type found")
@@ -199,7 +199,6 @@ impl Gen {
         // Ensure that the second ident is in symbol table. We should have access to this
         // variable from an inputted file, since we can't yet declare array types inside
         // tank files.
-        // TODO: accept input configs containing data sources
         match self.eval.symbol_table.get(second_ident.val.clone()) {
             Some(_) => (),
             None => panic!("tank: Error - variable {} is undefined.", second_ident.val)
@@ -353,16 +352,25 @@ impl Gen {
     /// tags. This is done by popping the values in the scope stack until the stack is
     /// empty.
     fn gen_el_contents(&mut self, ast: &Box<Ast>) -> &Gen {
-        let contents = if ast.ast_type == AstType::VariableValue {
-            self.get_var_val(&ast.val)
-        } else {
-            ast.val.clone()
-        };
+        let mut contents_str = String::new();
+
+        for child in ast.children.to_owned() {
+            match child.ast_type {
+                AstType::Ident => {
+                    contents_str = contents_str + " " + &child.val;
+                },
+                AstType::VariableValue => {
+                    let true_val = self.get_var_val(&child.val);
+                    contents_str = contents_str + " " + &true_val;
+                },
+                _ => panic!("tank: Unexpected ast type {} found in element contents")
+            };
+        }
 
         let indentation = self.el_stack.len() * INDENTATION_COUNT;
         self.emitter.space(indentation + INDENTATION_COUNT);
 
-        self.emitter.emit(&contents);
+        self.emitter.emit(&contents_str.trim_left());
         self.emitter.newline();
 
         self.clear_element_stack();

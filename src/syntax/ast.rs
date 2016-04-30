@@ -4,6 +4,7 @@ pub enum AstType {
     Element,
     Ident,
     ElementName,
+    Contents,
     Number,
     AttrList,
     IfExpr,

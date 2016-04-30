@@ -285,20 +285,27 @@ impl Parser {
 
         match self.curr_type {
             TokenType::Ident => {
-                let mut el_contents = String::new();
+                let mut contents_ast = Ast::new(AstType::Contents);
 
-                while self.curr_type == TokenType::Ident {
+                while self.curr_type == TokenType::Ident || self.curr_type == TokenType::Percent {
                     if self.peek() == TokenType::LeftParen {
                         break;
                     }
 
-                    el_contents = el_contents + " " + &self.curr_val;
+                    let child = match self.curr_type {
+                        TokenType::Ident => Ast::new_from_value(AstType::Ident, &self.curr_val),
+                        TokenType::Percent => {
+                            self.get_next_tok();
+                            Ast::new_from_value(AstType::VariableValue, &self.curr_val)
+                        },
+                        _ => Ast::new(AstType::Eof)
+                    };
+
+                    contents_ast.children.push(Box::new(child));
                     self.get_next_tok();
                 }
 
-                let el_trimmed = el_contents.trim_left();
-
-                Box::new(Ast::new_from_value(AstType::Ident, &el_trimmed))
+                Box::new(contents_ast)
             },
             TokenType::Ampersand => {
                 // Consume "&"
