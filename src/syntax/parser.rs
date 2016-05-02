@@ -5,16 +5,22 @@ use syntax::ast::Ast;
 use syntax::ast::AstType;
 use syntax::symbol_table::SymbolTable;
 
-pub struct Parser {
-    lexer: Lexer,
-    pub symbol_table: SymbolTable,
-    curr_val: String,
-    curr_type: TokenType,
-    pub root: Ast
+pub struct ParseMessages<'p> {
+    errors: Vec<&'p str>,
+    warnings: Vec<&'p str>
 }
 
-impl Parser {
-    pub fn new(template: String, symbol_table: SymbolTable) -> Parser {
+pub struct Parser<'p> {
+    lexer: Lexer,
+    curr_val: String,
+    curr_type: TokenType,
+    pub symbol_table: SymbolTable,
+    pub root: Ast,
+    pub messages: ParseMessages<'p>
+}
+
+impl<'p> Parser<'p> {
+    pub fn new(template: String, symbol_table: SymbolTable) -> Parser<'p> {
         let mut m_lexer = Lexer::new(template);
         m_lexer.lex();
         let tok = m_lexer.curr_tok
@@ -25,12 +31,18 @@ impl Parser {
         let m_type = tok.tok_type;
         let m_root = Ast::new(AstType::Template);
 
+        let pm = ParseMessages {
+            errors: Vec::new(),
+            warnings: Vec::new()
+        };
+
         Parser {
             lexer: m_lexer,
             symbol_table: symbol_table,
             curr_val: m_val,
             curr_type: m_type,
-            root: m_root
+            root: m_root,
+            messages: pm
         }
     }
 
@@ -38,7 +50,7 @@ impl Parser {
     /// here. Template is the top level ast, and should contain any elements that are not
     /// nested in other elements. The parsing process will continually call the lex() method
     /// from the struct's lexer object until EOF is reached.
-    pub fn parse(&mut self) -> &mut Parser {
+    pub fn parse(&mut self) -> &mut Parser<'p> {
         if self.curr_type == TokenType::Eof {
             panic!("tank: End of input reached, nothing to parse!");
         }
@@ -350,7 +362,7 @@ impl Parser {
     /// lex() method. If the next token from the lexer is None, then we return a token
     /// indicating EOF. We then update the internal value and type fields of the Parser
     /// struct.
-    fn get_next_tok(&mut self) -> &mut Parser {
+    fn get_next_tok(&mut self) -> &mut Parser<'p> {
         self.lexer.lex();
 
         let tok = self.lexer.curr_tok

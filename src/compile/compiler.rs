@@ -10,14 +10,13 @@ use syntax::parser::Parser;
 use syntax::symbol_table::SymbolTable;
 use generate::gen::Gen;
 
-pub struct Compiler {
-    parser: Parser,
+pub struct Compiler<'c> {
+    parser: Parser<'c>,
     filename: String
 }
 
-impl Compiler {
-    pub fn new(m_file: &mut File, filename: &String) -> Compiler {
-        // TODO: Read file by lines instead of into a string?
+impl<'c> Compiler<'c> {
+    pub fn new(m_file: &mut File, filename: &String) -> Compiler<'c> {
         let mut file_contents = String::new();
 
         match m_file.read_to_string(&mut file_contents) {
@@ -42,7 +41,7 @@ impl Compiler {
     /// config vars will be global for the current file.
     pub fn from_config_file(m_file: &mut File,
                             filename: &String,
-                            config_file: &mut File) -> Compiler {
+                            config_file: &mut File) -> Compiler<'c> {
         let mut config_file_contents = String::new();
         match config_file.read_to_string(&mut config_file_contents) {
             Err(error) => panic!("Failed to read config file: {}",
@@ -54,7 +53,7 @@ impl Compiler {
             .unwrap();
         let sym_tab = SymbolTable::from_existing_map(&input_map);
         let mut file_contents = String::new();
-        
+
         match m_file.read_to_string(&mut file_contents) {
             Err(error) => panic!("Failed to read {}: {}",
                                  &filename,
