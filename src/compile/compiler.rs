@@ -76,6 +76,14 @@ impl<'c> Compiler<'c> {
         println!("tank: Compiling '{}'...", &self.filename);
         self.parser.parse();
 
+        if self.parser.messages.has_messages() {
+            self.parser.messages.print_messages();
+
+            if self.parser.messages.is_err() {
+                panic!("tank: Could not compile {}", &self.filename)
+            }
+        }
+
         let ast = &self.parser.root;
         let sym = self.parser.symbol_table.clone();
 

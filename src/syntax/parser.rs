@@ -6,8 +6,42 @@ use syntax::ast::AstType;
 use syntax::symbol_table::SymbolTable;
 
 pub struct ParseMessages<'p> {
-    errors: Vec<&'p str>,
+    errors: Vec<String>,
     warnings: Vec<&'p str>
+}
+
+impl<'p> ParseMessages<'p> {
+    pub fn new() -> ParseMessages<'p> {
+        ParseMessages {
+            errors: Vec::new(),
+            warnings: Vec::new()
+        }
+    }
+
+    pub fn is_err(&self) -> bool {
+        self.errors.len() != 0
+    }
+
+    pub fn is_warn(&self) -> bool {
+        self.warnings.len() != 0
+    }
+
+    pub fn has_messages(&self) -> bool {
+        self.is_err() || self.is_warn()
+    }
+
+    pub fn print_messages(&self) {
+        for err in &self.errors {
+            println!("{}", err);
+        }
+
+        for warn in &self.warnings {
+            println!("{}", warn);
+        }
+
+        // An extra line here makes the messages a bit more readable before exiting.
+        print!("\n");
+    }
 }
 
 pub struct Parser<'p> {
@@ -29,20 +63,14 @@ impl<'p> Parser<'p> {
 
         let m_val = tok.val;
         let m_type = tok.tok_type;
-        let m_root = Ast::new(AstType::Template);
-
-        let pm = ParseMessages {
-            errors: Vec::new(),
-            warnings: Vec::new()
-        };
 
         Parser {
             lexer: m_lexer,
             symbol_table: symbol_table,
             curr_val: m_val,
             curr_type: m_type,
-            root: m_root,
-            messages: pm
+            root: Ast::new(AstType::Template),
+            messages: ParseMessages::new()
         }
     }
 
@@ -354,7 +382,11 @@ impl<'p> Parser<'p> {
         if self.curr_type == token {
             self.get_next_tok();
         } else {
-            panic!("tank: Parse error - Expected {:?}, found {:?}", token, self.curr_type);
+            let error_str = format!("tank: Parse error - Expected {:?}, found {:?}",
+                                    token,
+                                    self.curr_type);
+            self.messages.errors.push(error_str);
+//          panic!("tank: Parse error - Expected {:?}, found {:?}", token, self.curr_type);
         }
     }
 
