@@ -5,13 +5,13 @@ use syntax::ast::Ast;
 use syntax::ast::AstType;
 use syntax::symbol_table::SymbolTable;
 
-pub struct ParseMessages<'p> {
+pub struct ParseMessages {
     errors: Vec<String>,
-    warnings: Vec<&'p str>
+    warnings: Vec<String>
 }
 
-impl<'p> ParseMessages<'p> {
-    pub fn new() -> ParseMessages<'p> {
+impl ParseMessages {
+    pub fn new() -> ParseMessages {
         ParseMessages {
             errors: Vec::new(),
             warnings: Vec::new()
@@ -42,19 +42,23 @@ impl<'p> ParseMessages<'p> {
         // An extra line here makes the messages a bit more readable before exiting.
         print!("\n");
     }
+
+    pub fn new_err(&mut self, err_message: &str) {
+        self.errors.push(err_message.to_owned());
+    }
 }
 
-pub struct Parser<'p> {
+pub struct Parser {
     lexer: Lexer,
     curr_val: String,
     curr_type: TokenType,
     pub symbol_table: SymbolTable,
     pub root: Ast,
-    pub messages: ParseMessages<'p>
+    pub messages: ParseMessages
 }
 
-impl<'p> Parser<'p> {
-    pub fn new(template: String, symbol_table: SymbolTable) -> Parser<'p> {
+impl Parser {
+    pub fn new(template: String, symbol_table: SymbolTable) -> Parser {
         let mut m_lexer = Lexer::new(template);
         m_lexer.lex();
         let tok = m_lexer.curr_tok
@@ -78,9 +82,9 @@ impl<'p> Parser<'p> {
     /// here. Template is the top level ast, and should contain any elements that are not
     /// nested in other elements. The parsing process will continually call the lex() method
     /// from the struct's lexer object until EOF is reached.
-    pub fn parse(&mut self) -> &mut Parser<'p> {
+    pub fn parse(&mut self) -> &mut Parser {
         if self.curr_type == TokenType::Eof {
-            panic!("tank: End of input reached, nothing to parse!");
+            self.messages.new_err("tank: End of input reached, nothing to parse!");
         }
 
         let el = self.element();
@@ -98,6 +102,7 @@ impl<'p> Parser<'p> {
         let mut el_ast = Ast::new(AstType::Element);
         match self.curr_type {
             TokenType::Ident => {
+
                 match self.curr_val.as_ref() {
                     "if" => {
                         // Consume "if"
@@ -133,7 +138,7 @@ impl<'p> Parser<'p> {
                         self.get_next_tok();
 
                         if self.curr_val != "in" {
-                            panic!("tank: Parse error - Expected 'in' at for loop");
+                            self.messages.new_err("tank: Parse error - Expected 'in' at for loop");
                         } else {
                             self.get_next_tok();
                         }
@@ -305,7 +310,10 @@ impl<'p> Parser<'p> {
                 term_ast = Box::new(Ast::new(AstType::Eof));
             },
             TokenType::Arrow => {
-                panic!("tank: Parse error - Unexpected token {:?} found", self.curr_val);
+                let err = format!("tank: Parse error - Unexpected token {:?} found",
+                                  self.curr_val);
+                self.messages.new_err(&err);
+                term_ast = Box::new(Ast::new(AstType::Eof));
             },
             _ => {
                 term_ast = self.expr();
@@ -320,7 +328,9 @@ impl<'p> Parser<'p> {
     /// the element contents and interpolate variables.
     fn contents(&mut self) -> Box<Ast> {
         if self.curr_type == TokenType::Arrow {
-            panic!("tank: Parse error - Unexpected token {:?} found", self.curr_val);
+            let err = format!("tank: Parse error - Unexpected token {:?} found",
+                              self.curr_val);
+            self.messages.new_err(&err);
         }
 
         match self.curr_type {
@@ -385,8 +395,7 @@ impl<'p> Parser<'p> {
             let error_str = format!("tank: Parse error - Expected {:?}, found {:?}",
                                     token,
                                     self.curr_type);
-            self.messages.errors.push(error_str);
-//          panic!("tank: Parse error - Expected {:?}, found {:?}", token, self.curr_type);
+            self.messages.new_err(&error_str);
         }
     }
 
@@ -394,7 +403,7 @@ impl<'p> Parser<'p> {
     /// lex() method. If the next token from the lexer is None, then we return a token
     /// indicating EOF. We then update the internal value and type fields of the Parser
     /// struct.
-    fn get_next_tok(&mut self) -> &mut Parser<'p> {
+    fn get_next_tok(&mut self) -> &mut Parser {
         self.lexer.lex();
 
         let tok = self.lexer.curr_tok

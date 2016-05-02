@@ -10,13 +10,13 @@ use syntax::parser::Parser;
 use syntax::symbol_table::SymbolTable;
 use generate::gen::Gen;
 
-pub struct Compiler<'c> {
-    parser: Parser<'c>,
+pub struct Compiler {
+    parser: Parser,
     filename: String
 }
 
-impl<'c> Compiler<'c> {
-    pub fn new(m_file: &mut File, filename: &String) -> Compiler<'c> {
+impl Compiler {
+    pub fn new(m_file: &mut File, filename: &String) -> Compiler {
         let mut file_contents = String::new();
 
         match m_file.read_to_string(&mut file_contents) {
@@ -41,7 +41,7 @@ impl<'c> Compiler<'c> {
     /// config vars will be global for the current file.
     pub fn from_config_file(m_file: &mut File,
                             filename: &String,
-                            config_file: &mut File) -> Compiler<'c> {
+                            config_file: &mut File) -> Compiler {
         let mut config_file_contents = String::new();
         match config_file.read_to_string(&mut config_file_contents) {
             Err(error) => panic!("Failed to read config file: {}",
@@ -79,6 +79,9 @@ impl<'c> Compiler<'c> {
         if self.parser.messages.has_messages() {
             self.parser.messages.print_messages();
 
+            // We will panic here if there are errors. There is no need
+            // to continue trying to generate an output if we know we haven't
+            // been able to parse...
             if self.parser.messages.is_err() {
                 panic!("tank: Could not compile {}", &self.filename)
             }

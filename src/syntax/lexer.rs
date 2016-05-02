@@ -8,10 +8,10 @@ const EOF: char = '\0';
 #[derive(Debug)]
 pub struct Lexer {
     input: String,
+    char_count: usize,
     pub reserved: Reserved,
     pub curr_tok: Option<Token>,
-    pub curr_char: Option<char>,
-    char_count: usize
+    pub curr_char: Option<char>
 }
 
 impl Lexer {
