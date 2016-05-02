@@ -221,6 +221,10 @@ impl Parser {
             self.expect(TokenType::Colon);
 
             attr_ast.children.push(self.term());
+
+            if self.messages.is_err() {
+                break;
+            }
         }
 
         self.expect(TokenType::RightParen);

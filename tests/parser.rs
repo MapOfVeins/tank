@@ -32,30 +32,33 @@ fn setup_parser(filename: String) -> Parser {
 }
 
 #[test]
-#[should_panic(expected = "tank: End of input reached, nothing to parse!")]
 fn test_parse_empty_file() {
     let filename = DIR.to_owned() + "empty_file.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), true);
 }
 
 #[test]
-#[should_panic(expected = "tank: Parse error")]
 fn test_parse_if_expr_no_left_brace() {
     let filename = DIR.to_owned() + "if_expr_no_left_brace.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), true);
 }
 
 #[test]
-#[should_panic(expected= "tank: Parse error")]
 fn test_parse_if_expr_no_right_brace() {
     let filename = DIR.to_owned() + "if_expr_no_right_brace.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), true);
 }
 
 #[test]
@@ -64,6 +67,8 @@ fn test_parse_if_valid_expr() {
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), false);
 
     // Assert that the ast root is of the correcr form.
     let ast = parser.root;
@@ -89,21 +94,23 @@ fn test_parse_if_valid_expr() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Parse error - Unexpected token")]
 fn test_parse_element_no_left_paren() {
     let filename = DIR.to_owned() + "el_no_left_paren.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), true);
 }
 
 #[test]
-#[should_panic(expected = "tank: Parse error - Unexpected token")]
 fn test_parse_element_no_right_paren() {
     let filename = DIR.to_owned() + "el_no_right_paren.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), true);
 }
 
 #[test]
@@ -129,8 +136,9 @@ fn test_parse_element_no_attribute_list() {
     assert_eq!(attr_list_ast.children.len(), 0);
 
     let el_contents_ast = &el_ast.children[2];
-    assert_eq!(el_contents_ast.ast_type, AstType::Ident);
-    assert_eq!(el_contents_ast.val, "divContents".to_owned());
+    assert_eq!(el_contents_ast.ast_type, AstType::Contents);
+    assert_eq!(el_contents_ast.children.len(), 1);
+    assert_eq!(el_contents_ast.children[0].val, "divContents".to_owned());
 }
 
 #[test]
@@ -158,17 +166,19 @@ fn test_parse_nested_elements() {
     assert_eq!(nested_element.val, "p".to_owned());
 
     let nested_element_contents = &element_contents.children[2];
-    assert_eq!(nested_element_contents.ast_type, AstType::Ident);
-    assert_eq!(nested_element_contents.val, "pContents".to_owned());
+    assert_eq!(nested_element_contents.ast_type, AstType::Contents);
+    assert_eq!(nested_element_contents.children.len(), 1);
+    assert_eq!(nested_element_contents.children[0].val, "pContents".to_owned());
 }
 
 #[test]
-#[should_panic(expected = "tank: Parse error")]
 fn test_parse_element_with_attribute_list_missing_colon() {
     let filename = DIR.to_owned() + "el_attr_list_no_colon.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), true);
 }
 
 #[test]
@@ -201,12 +211,14 @@ fn test_parse_element_with_valid_attribute_list() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Parse error")]
+#[should_panic(expected = "tank: Invalid ast type found in symbol table")]
 fn test_parse_assign_no_type() {
     let filename = DIR.to_owned() + "assign_no_type.tank";
     let mut parser = setup_parser(filename);
 
     parser.parse();
+
+    assert_eq!(parser.messages.is_err(), true);
 }
 
 #[test]
