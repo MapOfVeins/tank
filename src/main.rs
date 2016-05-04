@@ -5,7 +5,6 @@ use std::fs;
 use std::fs::File;
 use std::path::Path;
 use std::error::Error;
-
 use tank::compile::compiler::Compiler;
 
 fn main() {

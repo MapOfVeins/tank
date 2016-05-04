@@ -1,5 +1,4 @@
 use std::default::Default;
-
 use error::error_traits::Diagnostic;
 
 #[derive(Default)]
