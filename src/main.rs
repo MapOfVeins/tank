@@ -1,9 +1,9 @@
 extern crate tank;
 
 use std::env;
-use std::path::Path;
 use std::fs;
 use std::fs::File;
+use std::path::Path;
 use std::error::Error;
 
 use tank::compile::compiler::Compiler;

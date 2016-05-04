@@ -1,6 +1,5 @@
 use std::fs::File;
-use std::io::BufWriter;
-use std::io::Write;
+use std::io::{BufWriter, Write};
 use std::error::Error;
 
 const LEFT_ANGLE_BRACKET: &'static str = "<";

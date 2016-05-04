@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-use std::collections::BTreeMap;
-
-use syntax::ast::Ast;
-use syntax::ast::AstType;
+use std::collections::{HashMap, BTreeMap};
+use syntax::ast::{Ast, AstType};
 
 const GLOBAL_SCOPE: &'static str = "global";
 const FOR_SCOPE: &'static str = "for";
@@ -41,7 +38,7 @@ impl SymbolTable {
                 val: v.to_owned(),
                 scope: GLOBAL_SCOPE.to_owned()
             };
-            
+
             symbols.insert(k.to_owned(), sym);
         }
 
