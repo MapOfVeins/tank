@@ -5,10 +5,10 @@ use std::fs::File;
 use std::error::Error;
 use std::io::Read;
 use std::collections::BTreeMap;
-
 use syntax::parser::Parser;
 use syntax::symbol_table::SymbolTable;
 use generate::gen::Gen;
+use error::error_traits::Diagnostic;
 
 pub struct Compiler {
     parser: Parser,
@@ -74,25 +74,34 @@ impl Compiler {
     /// to the corresponding .html file.
     pub fn compile(&mut self) -> &Compiler {
         println!("tank: Compiling '{}'...", &self.filename);
+
         self.parser.parse();
 
-        if self.parser.messages.has_messages() {
-            self.parser.messages.print_messages();
-
-            // We will panic here if there are errors. There is no need
-            // to continue trying to generate an output if we know we haven't
-            // been able to parse...
-            if self.parser.messages.is_err() {
-                panic!("tank: Could not compile {}", &self.filename)
-            }
-        }
+        self.check_diag(&self.parser.diagnostic);
 
         let ast = &self.parser.root;
         let sym = self.parser.symbol_table.clone();
-
         let mut gen = Gen::new(&self.filename, sym);
-        gen.output(ast.clone());
+
+        gen.output(ast);
+
+        self.check_diag(&gen.diagnostic);
 
         self
+    }
+
+    /// Checks the appropriate Diagnostic struct belonging to either the
+    /// parser or the generator. Prints any available diagnostic messages
+    /// and then checks for fatal errors. If they exist, we will panic and
+    /// exit the program without generating anything.
+    fn check_diag(&self, diagnostic: &Diagnostic) {
+        if diagnostic.has_diag() {
+            diagnostic.print_diag();
+        }
+
+        if diagnostic.is_err() {
+            // TODO: remove possibly generated file here?
+            panic!("tank: Could not compile {}", &self.filename);
+        }
     }
 }

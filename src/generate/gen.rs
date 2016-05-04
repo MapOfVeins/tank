@@ -1,15 +1,11 @@
 use std::fs::OpenOptions;
-use std::io::BufWriter;
-use std::io::Write;
-use std::io::Read;
+use std::io::{BufWriter, Write, Read};
 use std::error::Error;
-
 use compile::compiler::Compiler;
-
-use syntax::ast::Ast;
-use syntax::ast::AstType;
+use syntax::ast::{Ast, AstType};
 use syntax::symbol_table::SymbolTable;
-
+use error::error_traits::Diagnostic;
+use error::gen_err::GenDiagnostic;
 use generate::emit::Emitter;
 use generate::eval::Evaluator;
 
@@ -26,7 +22,8 @@ struct Scope {
 pub struct Gen {
     emitter: Emitter,
     eval: Evaluator,
-    el_stack: Vec<Scope>
+    el_stack: Vec<Scope>,
+    pub diagnostic: GenDiagnostic
 }
 
 impl Gen {
@@ -51,25 +48,28 @@ impl Gen {
         Gen {
             emitter: m_emitter,
             eval: m_eval,
-            el_stack: m_el_stack
+            el_stack: m_el_stack,
+            diagnostic: GenDiagnostic::new()
         }
     }
 
     /// Generate the contents of an HTML template from the given ast. The contents are written
     /// to the file provided when creating the generator.  This function will panic if the ast
     /// does not contain a template, or if the ast is empty.
-    pub fn output(&mut self, template: Ast) {
+    pub fn output(&mut self, template: &Ast) {
         if template.ast_type != AstType::Template {
-            panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
-                   template.ast_type,
-                   AstType::Template);
+            let err_str = format!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
+                                  template.ast_type,
+                                  AstType::Template);
+
+            self.diagnostic.new_err(&err_str);
         }
 
         if template.children.is_empty() {
-            panic!("tank: Empty ast found, nothing to generate.");
+            self.diagnostic.new_err(&"tank: Empty ast found, nothing to generate.");
         }
 
-        for ast in template.children {
+        for ast in &template.children {
             // Clear out the element stack, in case the last un-nested element is left over.
             self.el_stack.clear();
             self.expr_or_element(&ast);
@@ -96,13 +96,15 @@ impl Gen {
     /// contain another element.
     fn gen_element(&mut self, ast: &Box<Ast>) -> &Gen {
         if ast.ast_type != AstType::Element {
-            panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
-                   ast.ast_type,
-                   AstType::Element);
+            let err_str = format!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
+                                  ast.ast_type,
+                                  AstType::Element);
+
+            self.diagnostic.new_err(&err_str);
         }
 
         if ast.children.len() == 0 {
-            panic!("tank: Invalid element found, no children present in ast");
+            self.diagnostic.new_err(&"tank: Invalid element found, no children present in ast");
         }
 
         let first_child = &ast.children[0];
@@ -118,7 +120,7 @@ impl Gen {
         // containing either the contents or a nested element.
         // We should be guaranteed to have at least 3 ast types in the children vector.
         if ast.children.len() < 3 {
-            panic!("tank: Invalid Element ast found, not enough children present");
+            self.diagnostic.new_err(&"tank: Invalid Element ast found, not enough children present");
         }
 
         self.gen_el_name(&ast.children[0]);
@@ -141,9 +143,11 @@ impl Gen {
     /// are never written to file.
     fn gen_if(&mut self, ast: &Box<Ast>) -> &Gen {
         if ast.ast_type != AstType::IfExpr {
-            panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
-                   ast.ast_type,
-                   AstType::IfExpr);
+            let err_str = format!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
+                                  ast.ast_type,
+                                  AstType::IfExpr);
+
+            self.diagnostic.new_err(&err_str);
         }
 
         // Expect the first child to be the comparison operator in the if expression,
@@ -153,13 +157,13 @@ impl Gen {
         // Following this, we expect another element or expression which is contained
         // inside the if block.
         if ast.children.len() == 0 {
-            panic!("tank: Invalid ast found, no children for if expression");
+            self.diagnostic.new_err(&"tank: Invalid ast found, no children for if expression");
         }
 
         let expr = &ast.children[0];
 
         if expr.children.len() < 2 {
-            panic!("tank: Invalid expression ast found, not enough children in if expression");
+            self.diagnostic.new_err(&"tank: Invalid expression found, not enough children in if expression");
         }
 
         let is_gen = match expr.ast_type {
@@ -182,16 +186,18 @@ impl Gen {
 
     fn gen_for(&mut self, ast: &Box<Ast>) -> &Gen {
         if ast.ast_type != AstType::ForExpr {
-            panic!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
-                   ast.ast_type,
-                   AstType::ForExpr);
+            let err_str = format!("tank: Invalid ast provided to generator. Found {:?}, expected {:?}",
+                                  ast.ast_type,
+                                  AstType::ForExpr);
+
+            self.diagnostic.new_err(&err_str);
         }
 
         // Expect there to be at least 2 children, each identifier in the
         // "for" "in" declaration.  Technically the for block can be empty, but normally
         // we would also expect a third child which is the contents of the block.
         if ast.children.len() < 2 {
-            panic!("tank: Invalid ast found, not enough children found in for expression");
+            self.diagnostic.new_err(&"tank: Invalid ast found, not enough children found in for expression");
         }
 
         let second_ident = &ast.children[1];
@@ -201,7 +207,11 @@ impl Gen {
         // tank files.
         match self.eval.symbol_table.get(second_ident.val.clone()) {
             Some(_) => (),
-            None => panic!("tank: Error - variable {} is undefined.", second_ident.val)
+            None => {
+                let err_str = format!("tank: Error - variable {} is undefined.",
+                                      second_ident.val);
+                self.diagnostic.new_err(&err_str);
+            }
         };
 
         if ast.children.get(2).is_none() {
@@ -318,15 +328,17 @@ impl Gen {
                 let ref attr_val = attr_pair[1];
 
                 if attr_key.ast_type != AstType::Ident {
-                    panic!("tank: Wrong ast type found, expected {:?}, found {:?}",
-                           AstType::Ident,
-                           attr_key.ast_type);
+                    let err_str = format!("tank: Wrong ast type found, expected {:?}, found {:?}",
+                                          AstType::Ident,
+                                          attr_key.ast_type);
+                    self.diagnostic.new_err(&err_str);
                 }
 
                 if attr_val.ast_type != AstType::Ident {
-                    panic!("tank: Wrong ast type found, expected {:?}, found {:?}",
-                           AstType::Ident,
-                           attr_val.ast_type);
+                    let err_str = format!("tank: Wrong ast type found, expected {:?}, found {:?}",
+                                          AstType::Ident,
+                                          attr_val.ast_type);
+                    self.diagnostic.new_err(&err_str);
                 }
 
                 self.emitter.emit(&attr_key.val);
@@ -363,7 +375,11 @@ impl Gen {
                     let true_val = self.get_var_val(&child.val);
                     contents_str = contents_str + " " + &true_val;
                 },
-                _ => panic!("tank: Unexpected ast type {} found in element contents")
+                _ => {
+                    let err_str = format!("tank: Unexpected ast type {:?} found in element contents",
+                                          child.ast_type);
+                    self.diagnostic.new_err(&err_str);
+                }
             };
         }
 
@@ -383,7 +399,11 @@ impl Gen {
     fn get_var_val(&mut self, var_name: &String) -> String {
         match self.eval.symbol_table.get(var_name.to_owned()) {
             Some(symbol) => symbol.val.to_owned(),
-            None => panic!("tank: Invalid variable '{}' referenced", var_name)
+            None => {
+                let err_str = format!("tank: Invalid variable '{}' referenced", var_name);
+                self.diagnostic.new_err(&err_str);
+                String::new()
+            }
         }
     }
 

@@ -1,52 +1,9 @@
 use syntax::lexer::Lexer;
-use syntax::token::Token;
-use syntax::token::TokenType;
-use syntax::ast::Ast;
-use syntax::ast::AstType;
+use syntax::token::{Token, TokenType};
+use syntax::ast::{Ast, AstType};
 use syntax::symbol_table::SymbolTable;
-
-pub struct ParseMessages {
-    errors: Vec<String>,
-    warnings: Vec<String>
-}
-
-impl ParseMessages {
-    pub fn new() -> ParseMessages {
-        ParseMessages {
-            errors: Vec::new(),
-            warnings: Vec::new()
-        }
-    }
-
-    pub fn is_err(&self) -> bool {
-        self.errors.len() != 0
-    }
-
-    pub fn is_warn(&self) -> bool {
-        self.warnings.len() != 0
-    }
-
-    pub fn has_messages(&self) -> bool {
-        self.is_err() || self.is_warn()
-    }
-
-    pub fn print_messages(&self) {
-        for err in &self.errors {
-            println!("{}", err);
-        }
-
-        for warn in &self.warnings {
-            println!("{}", warn);
-        }
-
-        // An extra line here makes the messages a bit more readable before exiting.
-        print!("\n");
-    }
-
-    pub fn new_err(&mut self, err_message: &str) {
-        self.errors.push(err_message.to_owned());
-    }
-}
+use error::error_traits::Diagnostic;
+use error::parse_err::ParseDiagnostic;
 
 pub struct Parser {
     lexer: Lexer,
@@ -54,7 +11,7 @@ pub struct Parser {
     curr_type: TokenType,
     pub symbol_table: SymbolTable,
     pub root: Ast,
-    pub messages: ParseMessages
+    pub diagnostic: ParseDiagnostic
 }
 
 impl Parser {
@@ -74,7 +31,7 @@ impl Parser {
             curr_val: m_val,
             curr_type: m_type,
             root: Ast::new(AstType::Template),
-            messages: ParseMessages::new()
+            diagnostic: ParseDiagnostic::new()
         }
     }
 
@@ -84,7 +41,7 @@ impl Parser {
     /// from the struct's lexer object until EOF is reached.
     pub fn parse(&mut self) -> &mut Parser {
         if self.curr_type == TokenType::Eof {
-            self.messages.new_err("tank: End of input reached, nothing to parse!");
+            self.diagnostic.new_err("tank: End of input reached, nothing to parse!");
         }
 
         let el = self.element();
@@ -138,7 +95,7 @@ impl Parser {
                         self.get_next_tok();
 
                         if self.curr_val != "in" {
-                            self.messages.new_err("tank: Parse error - Expected 'in' at for loop");
+                            self.diagnostic.new_err("tank: Parse error - Expected 'in' at for loop");
                         } else {
                             self.get_next_tok();
                         }
@@ -222,7 +179,7 @@ impl Parser {
 
             attr_ast.children.push(self.term());
 
-            if self.messages.is_err() {
+            if self.diagnostic.is_err() {
                 break;
             }
         }
@@ -316,7 +273,7 @@ impl Parser {
             TokenType::Arrow => {
                 let err = format!("tank: Parse error - Unexpected token {:?} found",
                                   self.curr_val);
-                self.messages.new_err(&err);
+                self.diagnostic.new_err(&err);
                 term_ast = Box::new(Ast::new(AstType::Eof));
             },
             _ => {
@@ -334,7 +291,7 @@ impl Parser {
         if self.curr_type == TokenType::Arrow {
             let err = format!("tank: Parse error - Unexpected token {:?} found",
                               self.curr_val);
-            self.messages.new_err(&err);
+            self.diagnostic.new_err(&err);
         }
 
         match self.curr_type {
@@ -399,7 +356,7 @@ impl Parser {
             let error_str = format!("tank: Parse error - Expected {:?}, found {:?}",
                                     token,
                                     self.curr_type);
-            self.messages.new_err(&error_str);
+            self.diagnostic.new_err(&error_str);
         }
     }
 
