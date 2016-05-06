@@ -104,7 +104,7 @@ impl Gen {
         }
 
         if ast.children.len() == 0 {
-            self.diagnostic.new_err(&"tank: Invalid element found, no children present in ast");
+            panic!("tank: Invalid element found, no children present in ast");
         }
 
         let first_child = &ast.children[0];
@@ -120,7 +120,7 @@ impl Gen {
         // containing either the contents or a nested element.
         // We should be guaranteed to have at least 3 ast types in the children vector.
         if ast.children.len() < 3 {
-            self.diagnostic.new_err(&"tank: Invalid Element ast found, not enough children present");
+            panic!("tank: Invalid Element ast found, not enough children present");
         }
 
         self.gen_el_name(&ast.children[0]);
@@ -157,13 +157,13 @@ impl Gen {
         // Following this, we expect another element or expression which is contained
         // inside the if block.
         if ast.children.len() == 0 {
-            self.diagnostic.new_err(&"tank: Invalid ast found, no children for if expression");
+            panic!("tank: Invalid ast found, no children for if expression");
         }
 
         let expr = &ast.children[0];
 
         if expr.children.len() < 2 {
-            self.diagnostic.new_err(&"tank: Invalid expression found, not enough children in if expression");
+            panic!("tank: Invalid expression found, not enough children in if expression");
         }
 
         let is_gen = match expr.ast_type {

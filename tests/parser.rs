@@ -4,10 +4,10 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 use std::error::Error;
-
 use tank::syntax::parser::Parser;
 use tank::syntax::symbol_table::SymbolTable;
 use tank::syntax::ast::AstType;
+use tank::error::error_traits::Diagnostic;
 
 const DIR: &'static str = "tests/parser_input/";
 
@@ -38,7 +38,7 @@ fn test_parse_empty_file() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), true);
+    assert_eq!(parser.diagnostic.is_err(), true);
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn test_parse_if_expr_no_left_brace() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), true);
+    assert_eq!(parser.diagnostic.is_err(), true);
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn test_parse_if_expr_no_right_brace() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), true);
+    assert_eq!(parser.diagnostic.is_err(), true);
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn test_parse_if_valid_expr() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), false);
+    assert_eq!(parser.diagnostic.is_err(), false);
 
     // Assert that the ast root is of the correcr form.
     let ast = parser.root;
@@ -100,7 +100,7 @@ fn test_parse_element_no_left_paren() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), true);
+    assert_eq!(parser.diagnostic.is_err(), true);
 }
 
 #[test]
@@ -110,7 +110,7 @@ fn test_parse_element_no_right_paren() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), true);
+    assert_eq!(parser.diagnostic.is_err(), true);
 }
 
 #[test]
@@ -178,7 +178,7 @@ fn test_parse_element_with_attribute_list_missing_colon() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), true);
+    assert_eq!(parser.diagnostic.is_err(), true);
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn test_parse_assign_no_type() {
 
     parser.parse();
 
-    assert_eq!(parser.messages.is_err(), true);
+    assert_eq!(parser.diagnostic.is_err(), true);
 }
 
 #[test]

@@ -4,11 +4,10 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 use std::error::Error;
-
 use tank::syntax::symbol_table::SymbolTable;
-use tank::syntax::ast::AstType;
-use tank::syntax::ast::Ast;
+use tank::syntax::ast::{AstType, Ast};
 use tank::generate::gen::Gen;
+use tank::error::error_traits::Diagnostic;
 
 const OUT_FILENAME: &'static str = "tests/gen_test_output";
 
@@ -39,21 +38,23 @@ fn open_gen_output_file() -> String {
 }
 
 #[test]
-#[should_panic(expected = "tank: Invalid ast provided to generator.")]
 fn test_output_invalid_ast_type() {
     let mut gen = setup_gen(&OUT_FILENAME.to_owned());
     let invalid_ast = Ast::new(AstType::Eof);
 
     gen.output(&invalid_ast);
+
+    assert_eq!(gen.diagnostic.is_err(), true);
 }
 
 #[test]
-#[should_panic(expected = "tank: Empty ast found")]
 fn test_output_no_children_in_ast() {
     let mut gen = setup_gen(&OUT_FILENAME.to_owned());
     let invalid_ast = Ast::new(AstType::Template);
 
     gen.output(&invalid_ast);
+
+    assert_eq!(gen.diagnostic.is_err(), true);
 }
 
 #[test]
@@ -110,7 +111,7 @@ fn test_output_invalid_if_expr() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Invalid expression ast found")]
+#[should_panic(expected = "tank: Invalid expression found, not enough children in if expression")]
 fn test_output_invalid_if_expr_not_enough_children() {
     let mut gen = setup_gen(&OUT_FILENAME.to_owned());
     let mut invalid_ast = Ast::new(AstType::Template);
