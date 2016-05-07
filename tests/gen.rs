@@ -58,7 +58,7 @@ fn test_output_no_children_in_ast() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Invalid element found, no children present in ast")]
+#[should_panic(expected = "tank: FATAL ERROR - Invalid element found, no children present in ast")]
 fn test_output_invalid_ast_no_element_children() {
     let mut gen = setup_gen(&OUT_FILENAME.to_owned());
     let mut invalid_ast = Ast::new(AstType::Template);
@@ -70,7 +70,7 @@ fn test_output_invalid_ast_no_element_children() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Invalid Element ast found, not enough children present")]
+#[should_panic(expected = "tank: FATAL ERROR - Invalid Element ast found, not enough children present")]
 fn test_output_invalid_ast_element_not_enough_children() {
     let mut gen = setup_gen(&OUT_FILENAME.to_owned());
     let mut invalid_ast = Ast::new(AstType::Template);
@@ -99,7 +99,7 @@ fn test_output_should_write_nothing_for_assignment() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Invalid ast found, no children for if expression")]
+#[should_panic(expected = "tank: FATAL ERROR - Invalid ast found, no children for if expression")]
 fn test_output_invalid_if_expr() {
     let mut gen = setup_gen(&OUT_FILENAME.to_owned());
     let mut invalid_ast = Ast::new(AstType::Template);
@@ -111,7 +111,7 @@ fn test_output_invalid_if_expr() {
 }
 
 #[test]
-#[should_panic(expected = "tank: Invalid expression found, not enough children in if expression")]
+#[should_panic(expected = "tank: FATAL ERROR - Invalid expression found, not enough children in if expression")]
 fn test_output_invalid_if_expr_not_enough_children() {
     let mut gen = setup_gen(&OUT_FILENAME.to_owned());
     let mut invalid_ast = Ast::new(AstType::Template);

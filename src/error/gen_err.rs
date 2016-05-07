@@ -11,6 +11,10 @@ impl GenDiagnostic {
     pub fn new() -> GenDiagnostic {
         Default::default()
     }
+
+    pub fn fatal(&self, fatal_message: &str) {
+        panic!("tank: FATAL ERROR - ".to_owned() + fatal_message);
+    }
 }
 
 impl Diagnostic for GenDiagnostic {

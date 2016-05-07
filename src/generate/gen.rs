@@ -104,7 +104,7 @@ impl Gen {
         }
 
         if ast.children.len() == 0 {
-            panic!("tank: Invalid element found, no children present in ast");
+            self.diagnostic.fatal("Invalid element found, no children present in ast");
         }
 
         let first_child = &ast.children[0];
@@ -120,7 +120,7 @@ impl Gen {
         // containing either the contents or a nested element.
         // We should be guaranteed to have at least 3 ast types in the children vector.
         if ast.children.len() < 3 {
-            panic!("tank: Invalid Element ast found, not enough children present");
+            self.diagnostic.fatal("Invalid Element ast found, not enough children present");
         }
 
         self.gen_el_name(&ast.children[0]);
@@ -131,7 +131,10 @@ impl Gen {
             AstType::Contents | AstType::VariableValue => self.gen_el_contents(&ast.children[2]),
             AstType::Include => self.gen_include(&ast.children[2]),
             AstType::Eof => self.gen_empty(),
-            _ => panic!("tank: Unexpected ast type found")
+            _ => {
+                self.diagnostic.fatal("Unexpected ast type found");
+                self.gen_empty()
+            }
         };
 
         self
@@ -157,13 +160,13 @@ impl Gen {
         // Following this, we expect another element or expression which is contained
         // inside the if block.
         if ast.children.len() == 0 {
-            panic!("tank: Invalid ast found, no children for if expression");
+            self.diagnostic.fatal("Invalid ast found, no children for if expression");
         }
 
         let expr = &ast.children[0];
 
         if expr.children.len() < 2 {
-            panic!("tank: Invalid expression found, not enough children in if expression");
+            self.diagnostic.fatal("Invalid expression found, not enough children in if expression");
         }
 
         let is_gen = match expr.ast_type {
@@ -197,7 +200,7 @@ impl Gen {
         // "for" "in" declaration.  Technically the for block can be empty, but normally
         // we would also expect a third child which is the contents of the block.
         if ast.children.len() < 2 {
-            self.diagnostic.new_err(&"tank: Invalid ast found, not enough children found in for expression");
+            self.diagnostic.fatal("Invalid ast found, not enough children found in for expression");
         }
 
         let second_ident = &ast.children[1];
@@ -331,14 +334,14 @@ impl Gen {
                     let err_str = format!("tank: Wrong ast type found, expected {:?}, found {:?}",
                                           AstType::Ident,
                                           attr_key.ast_type);
-                    self.diagnostic.new_err(&err_str);
+                    self.diagnostic.fatal(&err_str);
                 }
 
                 if attr_val.ast_type != AstType::Ident {
                     let err_str = format!("tank: Wrong ast type found, expected {:?}, found {:?}",
                                           AstType::Ident,
                                           attr_val.ast_type);
-                    self.diagnostic.new_err(&err_str);
+                    self.diagnostic.fatal(&err_str);
                 }
 
                 self.emitter.emit(&attr_key.val);
@@ -378,7 +381,7 @@ impl Gen {
                 _ => {
                     let err_str = format!("tank: Unexpected ast type {:?} found in element contents",
                                           child.ast_type);
-                    self.diagnostic.new_err(&err_str);
+                    self.diagnostic.fatal(&err_str);
                 }
             };
         }
