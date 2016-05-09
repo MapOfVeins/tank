@@ -11,7 +11,10 @@ use generate::gen::Gen;
 use error::error_traits::Diagnostic;
 
 pub struct Compiler {
+    /// Unique parser for this compiler. Parsers and compilers are created
+    /// for every file that needs to be fully compiled
     parser: Parser,
+    /// Name of file to compile
     filename: String
 }
 

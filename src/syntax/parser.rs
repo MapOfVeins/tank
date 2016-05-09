@@ -6,11 +6,17 @@ use error::error_traits::Diagnostic;
 use error::parse_err::ParseDiagnostic;
 
 pub struct Parser {
+    /// Lexer struct called repeatedly to get tokens
     lexer: Lexer,
+    /// Current token value
     curr_val: String,
+    /// Current token type
     curr_type: TokenType,
+    /// Our current symbol table containing variable declarations
     pub symbol_table: SymbolTable,
+    /// Current ast (initially empty)
     pub root: Ast,
+    /// Error and warning message information
     pub diagnostic: ParseDiagnostic
 }
 

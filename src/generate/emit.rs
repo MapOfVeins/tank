@@ -10,6 +10,8 @@ const NEWLINE: &'static str = "\n";
 const QUOTE: &'static str = "\"";
 
 pub struct Emitter {
+    /// Buffer used to write to a particular file. The file is expected to
+    /// be opened/read elsewhere (probably in the Compiler struct)
     writer: BufWriter<File>
 }
 

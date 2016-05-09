@@ -6,10 +6,15 @@ const EOF: char = '\0';
 
 #[derive(Debug)]
 pub struct Lexer {
+    /// Contents of input file
     input: String,
+    /// Numbering of current char in the input string
     char_count: usize,
+    /// Reserved word struct for checking if identifiers are valid
     pub reserved: Reserved,
+    /// Last token to be consumed
     pub curr_tok: Option<Token>,
+    /// Last char seen by the lexer
     pub curr_char: Option<char>
 }
 

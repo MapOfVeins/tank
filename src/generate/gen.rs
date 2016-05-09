@@ -15,14 +15,20 @@ const INDENTATION_COUNT: usize = 2;
 
 #[derive(Clone, Debug)]
 struct Scope {
+    /// Number of spaces to write before generation
     indentation: usize,
+    /// Symbol name of this scope
     val: String
 }
 
 pub struct Gen {
+    /// Emitter struct handle file writing operations
     emitter: Emitter,
+    /// Evaluates expressions to determine if code needs to be generated
     eval: Evaluator,
+    /// Stack of elements used to determine scope
     el_stack: Vec<Scope>,
+    /// Error and warning information
     pub diagnostic: GenDiagnostic
 }
 
