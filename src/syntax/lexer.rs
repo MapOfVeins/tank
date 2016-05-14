@@ -157,7 +157,7 @@ impl Lexer {
             self.get_char();
             tok = Some(Token::new_from_value(TokenType::Arrow,
                                              &"->",
-                                             self.line_char_num,
+                                             self.line_char_num - 1,
                                              self.line_num));
         } else {
             tok = Some(Token::new_from_value(TokenType::Minus, &"-",
@@ -202,7 +202,7 @@ impl Lexer {
 
             let mut some_tok = Token::new_from_value(TokenType::Ident,
                                                      &ident,
-                                                     self.line_char_num - ident.len(),
+                                                     self.line_char_num - (ident.len() + 1),
                                                      self.line_num);
 
             // Match on reserved words
@@ -230,7 +230,7 @@ impl Lexer {
 
             tok = Some(Token::new_from_value(TokenType::Number,
                                              &ident,
-                                             self.line_char_num - ident.len(),
+                                             self.line_char_num - (ident.len() + 1),
                                              self.line_num));
         } else {
             tok = Some(Token::new_from_empty());
@@ -372,7 +372,7 @@ mod tests {
         left_brace_lex.lex();
 
         let curr_tok = left_brace_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::LeftBrace, &"{");
+        let expected = Token::new_from_value(TokenType::LeftBrace, &"{", 1, 1);
 
         assert_eq!(curr_tok, expected);
     }
@@ -383,7 +383,7 @@ mod tests {
         arrow_lex.lex();
 
         let curr_tok = arrow_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::Arrow, &"->");
+        let expected = Token::new_from_value(TokenType::Arrow, &"->", 1, 1);
 
         assert_eq!(curr_tok, expected);
     }
@@ -394,7 +394,7 @@ mod tests {
         minus_lex.lex();
 
         let curr_tok_minus = minus_lex.curr_tok.unwrap();
-        let expected_minus = Token::new_from_value(TokenType::Minus, &"-");
+        let expected_minus = Token::new_from_value(TokenType::Minus, &"-", 1, 1);
 
         assert_eq!(curr_tok_minus, expected_minus);
     }
@@ -405,7 +405,7 @@ mod tests {
         ident_lex.lex();
 
         let curr_tok = ident_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::Ident, &"testIdentifier");
+        let expected = Token::new_from_value(TokenType::Ident, &"testIdentifier", 1, 1);
 
         assert_eq!(curr_tok, expected);
     }
@@ -416,7 +416,7 @@ mod tests {
         ident_lex.lex();
 
         let curr_tok = ident_lex.curr_tok.unwrap();
-        let mut expected = Token::new_from_value(TokenType::Ident, &"int");
+        let mut expected = Token::new_from_value(TokenType::Ident, &"int", 1, 1);
         expected.set_reserved(true);
 
         assert_eq!(curr_tok, expected);
@@ -429,7 +429,7 @@ mod tests {
         num_lex.lex();
 
         let curr_tok = num_lex.curr_tok.unwrap();
-        let expected = Token::new_from_value(TokenType::Number, &"8080");
+        let expected = Token::new_from_value(TokenType::Number, &"8080", 1, 1);
 
         assert_eq!(curr_tok, expected);
     }
@@ -440,7 +440,7 @@ mod tests {
         empty_lex.lex();
 
         let curr_tok = empty_lex.curr_tok.unwrap();
-        let expected = Token::new(TokenType::Eof);
+        let expected = Token::new_from_empty();
 
         assert_eq!(curr_tok, expected);
     }
