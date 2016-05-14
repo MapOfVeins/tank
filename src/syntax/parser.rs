@@ -47,7 +47,7 @@ impl Parser {
     /// from the struct's lexer object until EOF is reached.
     pub fn parse(&mut self) -> &mut Parser {
         if self.curr_type == TokenType::Eof {
-            self.diagnostic.new_err("tank: End of input reached, nothing to parse!");
+            self.diagnostic.new_err("End of input reached, nothing to parse!");
         }
 
         let el = self.element();
@@ -101,7 +101,7 @@ impl Parser {
                         self.get_next_tok();
 
                         if self.curr_val != "in" {
-                            self.diagnostic.new_err("tank: Parse error - Expected 'in' at for loop");
+                            self.diagnostic.new_err("Expected 'in' at for loop");
                         } else {
                             self.get_next_tok();
                         }
@@ -277,7 +277,7 @@ impl Parser {
                 term_ast = Box::new(Ast::new(AstType::Eof));
             },
             TokenType::Arrow => {
-                let err = format!("tank: Parse error - Unexpected token {:?} found",
+                let err = format!("Unexpected token {:?} found",
                                   self.curr_val);
                 self.diagnostic.new_err(&err);
                 term_ast = Box::new(Ast::new(AstType::Eof));
@@ -295,7 +295,7 @@ impl Parser {
     /// the element contents and interpolate variables.
     fn contents(&mut self) -> Box<Ast> {
         if self.curr_type == TokenType::Arrow {
-            let err = format!("tank: Parse error - Unexpected token {:?} found",
+            let err = format!("Unexpected token {:?} found",
                               self.curr_val);
             self.diagnostic.new_err(&err);
         }
@@ -359,7 +359,8 @@ impl Parser {
         if self.curr_type == token {
             self.get_next_tok();
         } else {
-            let error_str = format!("tank: Parse error - Expected {:?}, found {:?}",
+            // TODO: may have to exit here?
+            let error_str = format!("Expected {:?}, found {:?}",
                                     token,
                                     self.curr_type);
             self.diagnostic.new_err(&error_str);
@@ -377,6 +378,8 @@ impl Parser {
             .take()
             .unwrap_or(Token::new_from_empty());
 
+
+        self.diagnostic.curr_tok = tok.clone();
         self.curr_val = tok.val;
         self.curr_type = tok.tok_type;
 

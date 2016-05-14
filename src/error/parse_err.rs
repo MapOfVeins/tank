@@ -1,15 +1,19 @@
-use std::default::Default;
 use error::error_traits::Diagnostic;
+use syntax::token::Token;
 
-#[derive(Default)]
 pub struct ParseDiagnostic {
     errors: Vec<String>,
-    warnings: Vec<String>
+    warnings: Vec<String>,
+    pub curr_tok: Token
 }
 
 impl ParseDiagnostic {
     pub fn new() -> ParseDiagnostic {
-        Default::default()
+        ParseDiagnostic {
+            errors: Vec::new(),
+            warnings: Vec::new(),
+            curr_tok: Token::new_from_empty()
+        }
     }
 }
 
@@ -32,7 +36,11 @@ impl Diagnostic for ParseDiagnostic {
 
     fn print_diag(&self) {
         for err in &self.errors {
-            println!("{}", err);
+            let err_str = format!("tank: Parse error at line {}, pos {} - {}",
+                                  self.curr_tok.line_num,
+                                  self.curr_tok.char_pos,
+                                  err);
+            println!("{}", err_str);
         }
 
         for warn in &self.warnings {
