@@ -26,7 +26,7 @@ impl Parser {
         m_lexer.lex();
         let tok = m_lexer.curr_tok
             .take()
-            .unwrap_or(Token::new(TokenType::Eof));
+            .unwrap_or(Token::new_from_empty());
 
         let m_val = tok.val;
         let m_type = tok.tok_type;
@@ -375,7 +375,7 @@ impl Parser {
 
         let tok = self.lexer.curr_tok
             .take()
-            .unwrap_or(Token::new(TokenType::Eof));
+            .unwrap_or(Token::new_from_empty());
 
         self.curr_val = tok.val;
         self.curr_type = tok.tok_type;

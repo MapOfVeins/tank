@@ -10,12 +10,18 @@ pub struct Lexer {
     input: String,
     /// Numbering of current char in the input string
     char_count: usize,
+    /// Line number of input
+    line_num: usize,
+    /// Char count of current line
+    line_char_num: usize,
     /// Reserved word struct for checking if identifiers are valid
     pub reserved: Reserved,
     /// Last token to be consumed
     pub curr_tok: Option<Token>,
     /// Last char seen by the lexer
-    pub curr_char: Option<char>
+    pub curr_char: Option<char>,
+
+
 }
 
 impl Lexer {
@@ -25,10 +31,12 @@ impl Lexer {
 
         Lexer {
             input: file_contents,
+            char_count: 1,
+            line_num: 1,
+            line_char_num: 1,
             reserved: r,
             curr_tok: None,
             curr_char: c,
-            char_count: 1
         }
     }
 
@@ -40,7 +48,7 @@ impl Lexer {
     /// for EOF.
     pub fn lex(&mut self) -> &mut Lexer {
         if self.curr_char.is_none() {
-            self.curr_tok = Some(Token::new(TokenType::Eof));
+            self.curr_tok = Some(Token::new_from_empty());
             return self;
         }
 
@@ -48,14 +56,19 @@ impl Lexer {
         let mut ch = self.curr_char.unwrap();
 
         if ch == EOF {
-            self.curr_tok = Some(Token::new(TokenType::Eof));
+            self.curr_tok = Some(Token::new_from_empty());
             return self;
         }
 
         while ch.is_whitespace() {
+            if ch == '\n' {
+                self.line_num = self.line_num + 1;
+                self.line_char_num = 1;
+            }
+
             self.get_char();
             if self.curr_char.is_none() {
-                self.curr_tok = Some(Token::new(TokenType::Eof));
+                self.curr_tok = Some(Token::new_from_empty());
                 return self;
             }
 
@@ -90,8 +103,8 @@ impl Lexer {
     /// decide the difference between an element name and its contents.
     pub fn peek_tok(&self) -> Token {
         let tok = match self.curr_char.unwrap_or(EOF) {
-            '(' => Token::new(TokenType::LeftParen),
-            _ => Token::new(TokenType::Eof)
+            '(' => Token::new(TokenType::LeftParen, self.line_char_num, self.line_num),
+            _ => Token::new_from_empty()
         };
 
         tok
@@ -109,6 +122,7 @@ impl Lexer {
         }
 
         self.char_count = self.char_count + 1;
+        self.line_char_num = self.line_char_num + 1;
 
         self
     }
@@ -120,8 +134,11 @@ impl Lexer {
     /// After a token is created, we advance the current char pointer.
     fn get_token(&mut self, token_type: TokenType) -> Option<Token> {
         let tok = match self.curr_char {
-            Some(c) => Some(Token::new_from_value(token_type, &c.to_string())),
-            None => Some(Token::new(TokenType::Eof))
+            Some(c) => Some(Token::new_from_value(token_type,
+                                                  &c.to_string(),
+                                                  self.line_char_num,
+                                                  self.line_num)),
+            None => Some(Token::new_from_empty())
         };
 
         self.get_char();
@@ -138,9 +155,14 @@ impl Lexer {
         if ch == '>' {
             // Consume the '-' char here, the '>' is consumed below.
             self.get_char();
-            tok = Some(Token::new_from_value(TokenType::Arrow, &"->"));
+            tok = Some(Token::new_from_value(TokenType::Arrow,
+                                             &"->",
+                                             self.line_char_num,
+                                             self.line_num));
         } else {
-            tok = Some(Token::new_from_value(TokenType::Minus, &"-"));
+            tok = Some(Token::new_from_value(TokenType::Minus, &"-",
+                                             self.line_char_num,
+                                             self.line_num));
         }
 
         self.get_char();
@@ -178,7 +200,10 @@ impl Lexer {
                 ch = append;
             }
 
-            let mut some_tok = Token::new_from_value(TokenType::Ident, &ident);
+            let mut some_tok = Token::new_from_value(TokenType::Ident,
+                                                     &ident,
+                                                     self.line_char_num - ident.len(),
+                                                     self.line_num);
 
             // Match on reserved words
             // TODO: way better reserved word handling is needed here.
@@ -203,9 +228,12 @@ impl Lexer {
                 ch = append;
             }
 
-            tok = Some(Token::new_from_value(TokenType::Number, &ident));
+            tok = Some(Token::new_from_value(TokenType::Number,
+                                             &ident,
+                                             self.line_char_num - ident.len(),
+                                             self.line_num));
         } else {
-            tok = Some(Token::new(TokenType::Eof));
+            tok = Some(Token::new_from_empty());
         }
 
         tok
@@ -223,21 +251,30 @@ impl Lexer {
             '=' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::EqualsEquals, &"=="));
+                    tok = Some(Token::new_from_value(TokenType::EqualsEquals,
+                                                     &"==",
+                                                     self.line_char_num - 1,
+                                                     self.line_num));
                 } else {
-                    tok = Some(Token::new_from_value(TokenType::Equals, &"="));
+                    tok = Some(Token::new_from_value(TokenType::Equals,
+                                                     &"=",
+                                                     self.line_char_num,
+                                                     self.line_num));
                 }
             },
             '!' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::NotEquals, &"!="));
+                    tok = Some(Token::new_from_value(TokenType::NotEquals,
+                                                     &"!=",
+                                                     self.line_char_num - 1,
+                                                     self.line_num));
                 } else {
                     // TODO: ! operator not supported yet
-                    tok = Some(Token::new(TokenType::Eof))
+                    tok = Some(Token::new_from_empty());
                 }
             },
-            _ => tok = Some(Token::new(TokenType::Eof))
+            _ => tok = Some(Token::new_from_empty())
         }
 
         self.get_char();
@@ -255,20 +292,32 @@ impl Lexer {
             '>' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::GtEquals, &">="));
+                    tok = Some(Token::new_from_value(TokenType::GtEquals,
+                                                     &">=",
+                                                     self.line_char_num - 1,
+                                                     self.line_num));
                 } else {
-                    tok = Some(Token::new_from_value(TokenType::Gt, &">"));
+                    tok = Some(Token::new_from_value(TokenType::Gt,
+                                                     &">",
+                                                     self.line_char_num,
+                                                     self.line_num));
                 }
             },
             '<' => {
                 if ch == '=' {
                     self.get_char();
-                    tok = Some(Token::new_from_value(TokenType::LtEquals, &"<="));
+                    tok = Some(Token::new_from_value(TokenType::LtEquals,
+                                                     &"<=",
+                                                     self.line_char_num - 1,
+                                                     self.line_num));
                 } else {
-                    tok = Some(Token::new_from_value(TokenType::Lt, &"<"));
+                    tok = Some(Token::new_from_value(TokenType::Lt,
+                                                     &"<",
+                                                     self.line_char_num,
+                                                     self.line_num));
                 }
             },
-            _ => tok = Some(Token::new(TokenType::Eof))
+            _ => tok = Some(Token::new_from_empty())
         }
 
         self.get_char();
