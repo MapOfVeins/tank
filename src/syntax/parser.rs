@@ -8,12 +8,9 @@ use error::parse_err::ParseDiagnostic;
 pub struct Parser {
     /// Lexer struct called repeatedly to get tokens
     lexer: Lexer,
-    /// Current token, held here when a symbol is lexed
+    /// Current token, held here when a symbol is lexed.
+    /// The value and the type of the current symbol can be accessed here
     curr_tok: Token,
-    /// Current token value
-    curr_val: String,
-    /// Current token type
-    curr_type: TokenType,
     /// Our current symbol table containing variable declarations
     pub symbol_table: SymbolTable,
     /// Current ast (initially empty)
@@ -26,16 +23,12 @@ impl Parser {
     pub fn new(template: String, symbol_table: SymbolTable) -> Parser {
         let mut m_lexer = Lexer::new(template);
         m_lexer.lex();
+        let tok = m_lexer.curr_tok.clone();
 
-        let tok = m_lexer.curr_tok.clone();//unwrap_or(Token::new_from_empty()).clone();
-        //let m_val = tok.val;
-        //let m_type = tok.tok_type;
         Parser {
             lexer: m_lexer,
             symbol_table: symbol_table,
             curr_tok: tok.unwrap_or(Token::new_from_empty()),
-            curr_val: String::new(),
-            curr_type: TokenType::Eof,
             root: Ast::new(AstType::Template),
             diagnostic: ParseDiagnostic::new()
         }
@@ -46,7 +39,7 @@ impl Parser {
     /// nested in other elements. The parsing process will continually call the lex() method
     /// from the struct's lexer object until EOF is reached.
     pub fn parse(&mut self) -> &mut Parser {
-        if self.curr_type == TokenType::Eof {
+        if self.curr_tok.tok_type == TokenType::Eof {
             self.diagnostic.new_err("End of input reached, nothing to parse!");
         }
 
@@ -63,10 +56,10 @@ impl Parser {
     /// left to parse, we will append an EOF to the ast indicating the end of input.
     fn element(&mut self) -> Box<Ast> {
         let mut el_ast = Ast::new(AstType::Element);
-        match self.curr_type {
+        match self.curr_tok.tok_type {
             TokenType::Ident => {
 
-                match self.curr_val.as_ref() {
+                match self.curr_tok.val.as_ref() {
                     "if" => {
                         // Consume "if"
                         self.get_next_tok();
@@ -92,7 +85,7 @@ impl Parser {
 
                         self.expect(TokenType::Colon);
 
-                        first_ident_ast.var_type = Some(self.curr_val.clone());
+                        first_ident_ast.var_type = Some(self.curr_tok.val.clone());
                         // Add to symbol table
                         // TODO: Will eventually be unnecessary I think
                         self.symbol_table.insert_for_id(&first_ident_ast);
@@ -100,7 +93,7 @@ impl Parser {
                         el_ast.children.push(first_ident_ast);
                         self.get_next_tok();
 
-                        if self.curr_val != "in" {
+                        if self.curr_tok.val != "in" {
                             self.diagnostic.new_err("Expected 'in' at for loop");
                         } else {
                             self.get_next_tok();
@@ -125,7 +118,7 @@ impl Parser {
                     _ => {
                         el_ast.children.push(self.term());
 
-                        if self.curr_type == TokenType::LeftParen {
+                        if self.curr_tok.tok_type == TokenType::LeftParen {
                             el_ast.children.push(self.attr_list());
                         }
 
@@ -154,7 +147,7 @@ impl Parser {
                 // Consume "&"
                 self.get_next_tok();
 
-                el_ast = Ast::new_from_value(AstType::Include, &self.curr_val);
+                el_ast = Ast::new_from_value(AstType::Include, &self.curr_tok.val);
 
                 // Consume filename
                 self.get_next_tok();
@@ -178,7 +171,7 @@ impl Parser {
 
         self.expect(TokenType::LeftParen);
 
-        while self.curr_type != TokenType::RightParen {
+        while self.curr_tok.tok_type != TokenType::RightParen {
             attr_ast.children.push(self.term());
 
             self.expect(TokenType::Colon);
@@ -200,7 +193,7 @@ impl Parser {
     /// Parse an intial test inside an expression.
     fn expr(&mut self) -> Box<Ast> {
         let mut test_ast = self.op();
-        let curr_ast_type = match self.curr_type {
+        let curr_ast_type = match self.curr_tok.tok_type {
             TokenType::Gt => AstType::Gt,
             TokenType::Lt => AstType::Lt,
             TokenType::GtEquals => AstType::GtEquals,
@@ -209,7 +202,7 @@ impl Parser {
             TokenType::EqualsEquals => AstType::EqualsEquals,
             TokenType::Colon => {
                 self.get_next_tok();
-                test_ast.var_type = Some(self.curr_val.clone());
+                test_ast.var_type = Some(self.curr_tok.val.clone());
                 // Consume the type.
                 self.get_next_tok();
 
@@ -236,11 +229,11 @@ impl Parser {
     fn op(&mut self) -> Box<Ast> {
         let mut op_ast = self.term();
 
-        while self.curr_type == TokenType::Plus || self.curr_type == TokenType::Minus {
+        while self.curr_tok.tok_type == TokenType::Plus || self.curr_tok.tok_type == TokenType::Minus {
             let op_ast_next = op_ast;
 
             //TODO: Currently, only supporting plus and minus
-            let curr_ast_type = match self.curr_type {
+            let curr_ast_type = match self.curr_tok.tok_type {
                 TokenType::Plus => AstType::Plus,
                 TokenType::Minus => AstType::Minus,
                 _ => AstType::Empty
@@ -259,18 +252,18 @@ impl Parser {
     /// or number, or could also contain another expression.
     fn term(&mut self) -> Box<Ast> {
         let term_ast;
-        match self.curr_type {
+        match self.curr_tok.tok_type {
             TokenType::Ident => {
                 // If we find a left paren next, we are declaring an element.
                 let m_type = match self.peek() {
                     TokenType::LeftParen => AstType::ElementName,
                     _ => AstType::Ident
                 };
-                term_ast = Box::new(Ast::new_from_value(m_type, &self.curr_val));
+                term_ast = Box::new(Ast::new_from_value(m_type, &self.curr_tok.val));
                 self.get_next_tok();
             },
             TokenType::Number => {
-                term_ast = Box::new(Ast::new_from_value(AstType::Number, &self.curr_val));
+                term_ast = Box::new(Ast::new_from_value(AstType::Number, &self.curr_tok.val));
                 self.get_next_tok();
             },
             TokenType::Eof => {
@@ -278,7 +271,7 @@ impl Parser {
             },
             TokenType::Arrow => {
                 let err = format!("Unexpected token {:?} found",
-                                  self.curr_val);
+                                  self.curr_tok.val);
                 self.diagnostic.new_err(&err);
                 term_ast = Box::new(Ast::new(AstType::Eof));
             },
@@ -294,26 +287,28 @@ impl Parser {
     /// separated by spaces.  Also will consume references to other files within
     /// the element contents and interpolate variables.
     fn contents(&mut self) -> Box<Ast> {
-        if self.curr_type == TokenType::Arrow {
+        if self.curr_tok.tok_type == TokenType::Arrow {
             let err = format!("Unexpected token {:?} found",
-                              self.curr_val);
+                              self.curr_tok.val);
             self.diagnostic.new_err(&err);
         }
 
-        match self.curr_type {
+        match self.curr_tok.tok_type {
             TokenType::Ident => {
                 let mut contents_ast = Ast::new(AstType::Contents);
 
-                while self.curr_type == TokenType::Ident || self.curr_type == TokenType::Percent {
+                while (self.curr_tok.tok_type == TokenType::Ident) ||
+                    (self.curr_tok.tok_type == TokenType::Percent) {
+
                     if self.peek() == TokenType::LeftParen {
                         break;
                     }
 
-                    let child = match self.curr_type {
-                        TokenType::Ident => Ast::new_from_value(AstType::Ident, &self.curr_val),
+                    let child = match self.curr_tok.tok_type {
+                        TokenType::Ident => Ast::new_from_value(AstType::Ident, &self.curr_tok.val),
                         TokenType::Percent => {
                             self.get_next_tok();
-                            Ast::new_from_value(AstType::VariableValue, &self.curr_val)
+                            Ast::new_from_value(AstType::VariableValue, &self.curr_tok.val)
                         },
                         _ => Ast::new(AstType::Eof)
                     };
@@ -328,7 +323,7 @@ impl Parser {
                 // Consume "&"
                 self.get_next_tok();
 
-                let include_ast = Box::new(Ast::new_from_value(AstType::Include, &self.curr_val));
+                let include_ast = Box::new(Ast::new_from_value(AstType::Include, &self.curr_tok.val));
 
                 // Consume the identifier for the filename now
                 self.get_next_tok();
@@ -339,7 +334,7 @@ impl Parser {
                 // Consume "%"
                 self.get_next_tok();
 
-                let var_ast = Box::new(Ast::new_from_value(AstType::VariableValue, &self.curr_val));
+                let var_ast = Box::new(Ast::new_from_value(AstType::VariableValue, &self.curr_tok.val));
 
                 // Consume identifier
                 self.get_next_tok();
@@ -356,13 +351,12 @@ impl Parser {
     /// the expected one, the parser will panic. Otherwise, we will advance to the next
     /// token and update the parser internals.
     fn expect(&mut self, token_type: TokenType) {
-        if self.curr_type == token_type {
+        if self.curr_tok.tok_type == token_type {
             self.get_next_tok();
         } else {
-            // TODO: may have to exit here?
             let error_str = format!("Expected {:?}, found {:?}",
                                     token_type,
-                                    self.curr_type);
+                                    self.curr_tok.tok_type);
             self.diagnostic.parse_err(&error_str, &self.curr_tok);
         }
     }
@@ -373,12 +367,7 @@ impl Parser {
     /// struct.
     fn get_next_tok(&mut self) -> &mut Parser {
         self.lexer.lex();
-
-        let tok = self.lexer.curr_tok.clone().unwrap_or(Token::new_from_empty());
-
-        self.curr_tok = tok;
-        self.curr_val = tok.val;
-        self.curr_type = tok.tok_type;
+        self.curr_tok  = self.lexer.curr_tok.clone().unwrap_or(Token::new_from_empty());
 
         self
     }
