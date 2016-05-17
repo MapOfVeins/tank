@@ -8,6 +8,8 @@ use error::parse_err::ParseDiagnostic;
 pub struct Parser {
     /// Lexer struct called repeatedly to get tokens
     lexer: Lexer,
+    /// Current token, held here when a symbol is lexed
+    curr_tok: Token,
     /// Current token value
     curr_val: String,
     /// Current token type
@@ -24,18 +26,16 @@ impl Parser {
     pub fn new(template: String, symbol_table: SymbolTable) -> Parser {
         let mut m_lexer = Lexer::new(template);
         m_lexer.lex();
-        let tok = m_lexer.curr_tok
-            .take()
-            .unwrap_or(Token::new_from_empty());
 
-        let m_val = tok.val;
-        let m_type = tok.tok_type;
-
+        let tok = m_lexer.curr_tok.clone();//unwrap_or(Token::new_from_empty()).clone();
+        //let m_val = tok.val;
+        //let m_type = tok.tok_type;
         Parser {
             lexer: m_lexer,
             symbol_table: symbol_table,
-            curr_val: m_val,
-            curr_type: m_type,
+            curr_tok: tok.unwrap_or(Token::new_from_empty()),
+            curr_val: String::new(),
+            curr_type: TokenType::Eof,
             root: Ast::new(AstType::Template),
             diagnostic: ParseDiagnostic::new()
         }
@@ -355,15 +355,15 @@ impl Parser {
     /// Match the current token to an expected one. If the current token does not equal
     /// the expected one, the parser will panic. Otherwise, we will advance to the next
     /// token and update the parser internals.
-    fn expect(&mut self, token: TokenType) {
-        if self.curr_type == token {
+    fn expect(&mut self, token_type: TokenType) {
+        if self.curr_type == token_type {
             self.get_next_tok();
         } else {
             // TODO: may have to exit here?
             let error_str = format!("Expected {:?}, found {:?}",
-                                    token,
+                                    token_type,
                                     self.curr_type);
-            self.diagnostic.new_err(&error_str);
+            self.diagnostic.parse_err(&error_str, &self.curr_tok);
         }
     }
 
@@ -374,12 +374,9 @@ impl Parser {
     fn get_next_tok(&mut self) -> &mut Parser {
         self.lexer.lex();
 
-        let tok = self.lexer.curr_tok
-            .take()
-            .unwrap_or(Token::new_from_empty());
+        let tok = self.lexer.curr_tok.clone().unwrap_or(Token::new_from_empty());
 
-
-        self.diagnostic.curr_tok = tok.clone();
+        self.curr_tok = tok;
         self.curr_val = tok.val;
         self.curr_type = tok.tok_type;
 

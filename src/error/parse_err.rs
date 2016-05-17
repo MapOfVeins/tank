@@ -3,17 +3,24 @@ use syntax::token::Token;
 
 pub struct ParseDiagnostic {
     errors: Vec<String>,
-    warnings: Vec<String>,
-    pub curr_tok: Token
+    warnings: Vec<String>
 }
 
 impl ParseDiagnostic {
     pub fn new() -> ParseDiagnostic {
         ParseDiagnostic {
             errors: Vec::new(),
-            warnings: Vec::new(),
-            curr_tok: Token::new_from_empty()
+            warnings: Vec::new()
         }
+    }
+
+    pub fn parse_err(&mut self, err: &String, token: &Token) {
+        let err_str = format!("tank: Parse error at line {}, pos {} - {}",
+                              token.line_num,
+                              token.char_pos,
+                              err);
+
+        self.errors.push(err_str.to_owned());
     }
 }
 
@@ -36,11 +43,7 @@ impl Diagnostic for ParseDiagnostic {
 
     fn print_diag(&self) {
         for err in &self.errors {
-            let err_str = format!("tank: Parse error at line {}, pos {} - {}",
-                                  self.curr_tok.line_num,
-                                  self.curr_tok.char_pos,
-                                  err);
-            println!("{}", err_str);
+            println!("{}", err);
         }
 
         for warn in &self.warnings {
