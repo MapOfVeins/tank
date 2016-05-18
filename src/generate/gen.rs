@@ -37,12 +37,11 @@ impl Gen {
         let mut options = OpenOptions::new();
         options.write(true);
         options.create(true);
-        options.append(true);
         options.truncate(true);
 
         let file = match options.open(filename.to_owned() + EXT) {
             Ok(file) => file,
-            Err(..) => panic!("tank: unable to open file {}", filename)
+            Err(error) => panic!("tank: unable to open file: {}", error)
         };
 
         let buf_writer = BufWriter::new(file);
