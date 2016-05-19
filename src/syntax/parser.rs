@@ -20,6 +20,12 @@ pub struct Parser {
 }
 
 impl Parser {
+    /// Creates a new Parser for given file contents. The file is
+    /// expected to be open already and read into a string to be
+    /// parsed here.
+    ///
+    /// This function also lexes the first available character from
+    /// the lexer and puts it into the curr_tok field.
     pub fn new(template: String, symbol_table: SymbolTable) -> Parser {
         let mut m_lexer = Lexer::new(template);
         m_lexer.lex();

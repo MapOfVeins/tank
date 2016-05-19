@@ -19,12 +19,14 @@ pub struct Lexer {
     /// Last token to be consumed
     pub curr_tok: Option<Token>,
     /// Last char seen by the lexer
-    pub curr_char: Option<char>,
-
-
+    pub curr_char: Option<char>
 }
 
+
 impl Lexer {
+    /// Creates a new lexer given the contents of a file. Chooses the first
+    /// character in those file contents and sets it as the current char
+    /// in the struct.
     pub fn new(file_contents: String) -> Lexer {
         let r = Reserved::new();
         let c = file_contents.chars().nth(0);

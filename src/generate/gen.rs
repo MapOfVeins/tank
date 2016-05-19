@@ -33,6 +33,9 @@ pub struct Gen {
 }
 
 impl Gen {
+    /// Creates a new Gen struct for a specific file. Will open/create
+    /// the file that needs to be compiled, as well as set up the
+    /// proper writing buffer.
     pub fn new(filename: &String, symbol_table: SymbolTable) -> Gen {
         let mut options = OpenOptions::new();
         options.write(true);
